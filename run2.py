@@ -22,29 +22,15 @@ tSM.SetBranchAddress("p4",pSM);
 tSM.SetBranchAddress("id",iSM);
 
 
-### make the libraries
-# type=2
-# sba=1
-# mX=500
-# nameX="H"
-# cuts = "m"+nameX+"=="+str(mX)+" && sba==1 && TMath::ATan(tanb)>0. && TMath::ATan(tanb)<TMath::Pi()/2. && TMath::Abs(cba)<=1. && type=="+str(type)+" && (status&3)==0"
-# width = "" ### "(width_H/mH>0.05 && width_H/mH<0.1)"
-# if(width!=""): cuts += " && "+width
-# mgpath = "/Users/hod/MC/MadGraph/MG5_aMC_v2_3_3_tests/"
-# libmatrix = "matrix/"+nameX+"/"+str(mX)+"/"
-# THDM.setParameters(nameX,mX,cuts,type,sba)
-# alphaS = 0.13
-# nhel   = 0 # means sum over all helicity
-
-type   = THDM.model.type
-sba    = THDM.model.sba
-mX     = THDM.model.mX
-nameX  = THDM.model.nameX
-cuts   = THDM.model.cuts
-mgpath = THDM.model.mgpath
-alphaS = THDM.model.alphaS
-nhel   = THDM.model.nhel
-
+#### get the model
+type      = THDM.model.type
+sba       = THDM.model.sba
+mX        = THDM.model.mX
+nameX     = THDM.model.nameX
+cuts      = THDM.model.cuts
+mgpath    = THDM.model.mgpath
+alphaS    = THDM.model.alphaS
+nhel      = THDM.model.nhel
 libmatrix = "matrix/"+nameX+"/"+str(mX)+"/"
 THDM.setParameters(nameX,mX,cuts,type,sba)
 
@@ -78,7 +64,6 @@ tnew.Branch("ymtau",ymtau)
 tnew.Branch("ymmu",ymmu)
 n=1
 for event in tSM:
-   # if(n>50000): break
    if(n%1000==0): print "processed |SM|^2 and reweighting ", n
    g1=event.p4[0]
    g2=event.p4[1]
