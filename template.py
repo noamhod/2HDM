@@ -291,6 +291,7 @@ def plot2d(h,nsmooth,fname,drawopt,nameX,mX,hR=0,minz=+1.e11,maxz=-1.e11,phi=-50
 def skipPoint(stanb,sinba,nameX,mX):
    if(nameX=="H" and mX==500 and sinba==1 and stanb=="0.22"): return True
    if(nameX=="H" and mX==500 and sinba==1 and stanb=="0.54"): return True
+   if(nameX=="H" and mX==500 and sinba==1 and stanb=="0.74"): return True ## not sure if this is needed
    return False
 
 
@@ -405,6 +406,7 @@ for event in tSM:
    n+=1
 
 
+### the binning for the tan(beta) axis !!
 tanblist = []
 for i in range(0,len(THDM.parameters)):
    ################################################
@@ -454,10 +456,9 @@ plot2d(hIX,nsmooth,fname,"SURF3",nameX,mX,hSM)
 plotWidth(dwdictX,fname,nameX,mX,cuts)
 # plotYMX(dydictX,fname,nameX,mX,cuts)
 
-for tb in tanblist_sorted:
-   sys.stdout.write('%.2f' % tb)
+for tanb in tanblist_sorted:
+   stanb = '%.2f' % tanb
 # for stanb, h1 in h1dictXX.iteritems():
-   stanb = float(tb)
    plot1d(h1dictSM[stanb],h1dictXX[stanb],h1dictIX[stanb],swdictX[stanb],fname,stanb,nameX,mX)
 c = TCanvas("c","c",600,600)
 c.SaveAs(fname+")")
