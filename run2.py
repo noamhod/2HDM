@@ -41,7 +41,9 @@ THDM.setModules(os.getcwd(),libmatrix,nameX,len(THDM.parameters),"All")
 print THDM.modules
 
 ### output tree
-outFile = "2HDM."+nameX+"."+str(mX)+"GeV.tree.root" 
+Nk = tSM.GetEntries()
+sNk = str(Nk/1000)+"k"
+outFile = "2HDM."+nameX+"."+str(mX)+"GeV.tree."+sNk+".root" 
 newFile = TFile(outFile,"RECREATE") 
 tnew = tSM.CloneTree(0)
 wgt  = std.vector(float)()

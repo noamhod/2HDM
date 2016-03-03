@@ -292,6 +292,7 @@ def skipPoint(stanb,sinba,nameX,mX):
    if(nameX=="H" and mX==500 and sinba==1 and stanb=="0.22"): return True
    if(nameX=="H" and mX==500 and sinba==1 and stanb=="0.54"): return True
    if(nameX=="H" and mX==500 and sinba==1 and stanb=="0.74"): return True ## not sure if this is needed
+   if(nameX=="A" and mX==500 and sinba==1 and stanb=="0.64"): return True ## not sure if this is needed
    return False
 
 

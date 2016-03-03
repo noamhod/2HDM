@@ -15,7 +15,7 @@ import imp
 
 class t2HDM:
    """The 2HDM definitions"""
-   def __init__(self, nameX="H", mX=500, type=2, sba=1, mintanb=0.5):
+   def __init__(self, nameX="A", mX=500, type=2, sba=1, mintanb=0.3):
       self.nameX   = nameX
       self.mX      = mX
       self.type    = type
