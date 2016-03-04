@@ -194,38 +194,6 @@ def plot(h1, h2, h3, tanb, wX, fname, ymin=-1, ymax=-1):
    cnv.SaveAs(fname);
 
 
-
-# @contextmanager
-# def cd(newdir):
-#    prevdir = os.getcwd()
-#    os.chdir(os.path.expanduser(newdir))
-#    try:
-#       yield
-#    finally:
-#       os.chdir(prevdir)
-
-
-# def setModules(basepath,nX,index=-1):
-#    name = 'matrix2SMpy'
-#    with cd(libmatrix+"SM/"):
-#       print "in "+os.getcwd()+", trying to import "+name
-#       module_info = imp.find_module(name,[basepath+"/"+libmatrix+"SM/"])
-#       globals()[name] = imp.load_module(name, *module_info)
-#       globals()[name].initialise("param_card.dat")
-#       print "Successfully initialised ",name
-# 
-#    for i in range (0,nX):
-#       if(index!=-1 and i!=index): continue
-#       name = 'matrix2'+nameX+str(i)+'py'
-#       sindex = name.replace("matrix2"+nameX,"").replace("py","")
-#       with cd(libmatrix+sindex+"/"):
-#          print "in "+os.getcwd()+", trying to import ",name
-#          module_info = imp.find_module(name,[basepath+"/"+libmatrix+str(index)+"/"])
-#          globals()[name] = imp.load_module(name, *module_info)
-#          globals()[name].initialise("param_card.dat")
-#          print "Successfully initialised ",name
-
-
 # def getME2(libpath,g1,g2,t1,t2,printerr=False,printout=False):
 #    sg1 = "-g1e "+str(g1.E())+" -g1px "+str(g1.Px())+" -g1py "+str(g1.Py())+" -g1pz "+str(g1.Pz())
 #    sg2 = "-g2e "+str(g2.E())+" -g2px "+str(g2.Px())+" -g2py "+str(g2.Py())+" -g2pz "+str(g2.Pz())
