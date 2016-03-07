@@ -239,7 +239,8 @@ nhel   = THDM.model.nhel
 libmatrix = "matrix/"+nameX+"/"+str(mX)+"/"
 THDM.setParameters(nameX,mX,cuts,type,sba)
 ###############
-index=26 ######
+# [20] tanb=0.660000 sba=1.000000 cba=0.000000 wA=52.510675 wH=29.593605 YMT=261.363636 YMB=3.102000 YMC=2.151515 YMM=0.069736 YMTAU=1.172820
+index=20 ######
 THDM.setModules(os.getcwd(),libmatrix,nameX,len(THDM.parameters),"SM")
 THDM.setModules(os.getcwd(),libmatrix,nameX,len(THDM.parameters),"X",index)
 ###############
@@ -269,7 +270,7 @@ hmSMXgen.SetMarkerColor(ROOT.kAzure+9)
 hmSMXgen.SetMarkerStyle(24)
 
 
-fSM = TFile("tops.SM.root","READ")
+fSM = TFile("tops.SM.500k.root","READ")
 tSM = fSM.Get("SM")
 pSM = ROOT.vector(TLorentzVector)()
 iSM = std.vector(int)()
@@ -287,7 +288,6 @@ tXX.SetBranchAddress("id",iXX);
 
 n=1
 for event in tSM:
-   # if(n>50000): break
    if(n%10000==0): print "processed |SM|^2 and reweighting ", n
    g1=event.p4[0]
    g2=event.p4[1]

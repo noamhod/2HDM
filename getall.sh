@@ -1,0 +1,12 @@
+./getf.sh 2HDM.tmproj
+./getf.sh THDM.py
+./getf.sh kinematics.py
+./getf.sh makeMatrix.py
+./getf.sh matrix.py
+./getf.sh run.py
+./getf.sh run2.py
+./getf.sh run3.py
+./getf.sh template.py
+./getf.sh testTree.py
+./getf.sh main34.cc
+./getf.sh Makefile

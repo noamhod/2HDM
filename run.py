@@ -700,7 +700,7 @@ hphi2SMIH0.SetMarkerStyle(24)
 
 
 
-fSM   = TFile("tops.SM.root","READ")
+fSM   = TFile("tops.SM.500k.root","READ")
 tSM   = fSM.Get("SM")
 fSMIH = TFile("tops.SMIH.root","READ")
 tSMIH = fSMIH.Get("SMIH")

@@ -29,7 +29,7 @@ using namespace Pythia8;
 
 enum proc
 {
-	SM,SMH,SMIH,IH,I,H,IA,A,SMIH_valid
+	SM,SMNLO,SMH,SMIA,SMIH,IH,I,H,IA,A,SMIA_valid,SMIH_valid
 };
 
 //==========================================================================
@@ -53,13 +53,16 @@ void setTree(int name)
 	switch(name)
 	{
 		case SM  :       initFile("SM");         break;
+		case SMNLO:      initFile("SMNLO");      break;
 		case SMH :       initFile("SMH");        break;
+		case SMIA:       initFile("SMIA");       break;
 		case SMIH:       initFile("SMIH");       break;
 		case IH:         initFile("IH");         break;
 		case I:          initFile("I");          break;
 		case H:          initFile("H");          break;
 		case IA:         initFile("IA");         break;
 		case A:          initFile("A");          break;
+		case SMIA_valid: initFile("SMIA_valid"); break;
 		case SMIH_valid: initFile("SMIH_valid"); break;
 		default:   cout << "ENUM unkown: " << name << endl;  exit(-1);
 	}	
@@ -156,7 +159,7 @@ int main(int argc, char* argv[])
 
   // Pythia object to be used a couple of times
   Pythia* pythia;
-  int nEvents = 500000;
+  int nEvents = 10000;
   string sEvents = "";
   stringstream strm;
   strm << nEvents;
@@ -178,10 +181,29 @@ int main(int argc, char* argv[])
 		madgraph1.readString(" set ebeam1 6500");
 		madgraph1.readString(" set ebeam2 6500");
 		pythia->setLHAupPtr(&madgraph1);
+		run(pythia, SMNLO, nEvents);
+		delete pythia;
+	}
+	if(name=="SMNLO")
+	{
+		// Produce leading-order gg->tt SM events with MadGraph 5.
+		pythia = new Pythia();
+		system("rm -rf madgraphrun_nlo");
+		LHAupMadgraph madgraph_nlo(pythia, true, "madgraphrun_nlo", exe);
+		// madgraph_nlo.setEvents(nEvents);
+		madgraph_nlo.readString("import model loop_sm");
+		madgraph_nlo.readString("generate g g > t t~ [QCD]");
+		// Note the need for a blank character before "set".
+		madgraph_nlo.readString(" set cut_decays F");
+		madgraph_nlo.readString(" set MT 172.5");
+		madgraph_nlo.readString(" set nevents "+sEvents);
+		madgraph_nlo.readString(" set ebeam1 6500");
+		madgraph_nlo.readString(" set ebeam2 6500");
+		pythia->setLHAupPtr(&madgraph_nlo);
 		run(pythia, SM, nEvents);
 		delete pythia;
 	}
-	else if(name=="SMIH")
+	else if(name=="SMIA")
 	{
 		// Produce leading-order gg->tt SM+A events with MadGraph 5.
 		pythia = new Pythia();
@@ -191,18 +213,21 @@ int main(int argc, char* argv[])
 		madgraph2.readString("import model Higgs_Effective_Couplings_FormFact");
 		madgraph2.readString("generate g g > t t~ / h HIW=1 HIG=1 QED=99 QCD=99");
 		// Note the need for a blank character before "set".
+		// [59] tanb=0.860000 sba=1.000000 cba=0.000000 wA=30.931584 wH=17.434106 YMT=200.581395 YMB=4.042000 YMC=1.651163 YMM=0.090868 YMTAU=1.528220
 		madgraph2.readString(" set cut_decays F");
 		madgraph2.readString(" set MT 172.5");
 		madgraph2.readString(" set MP 500");
-		madgraph2.readString(" set WH1 49.63");
-		madgraph2.readString(" set YMTAU 1.1351");
-		madgraph2.readString(" set YMT 260.8092");
-		madgraph2.readString(" set YMB 2.6825");
+		madgraph2.readString(" set WH1 30.931584");
+		madgraph2.readString(" set YMT 200.581395");
+		madgraph2.readString(" set YMB 4.042000");
+		madgraph2.readString(" set YMC 1.651163");
+		madgraph2.readString(" set YMTAU 1.528220");
+		madgraph2.readString(" set YMM 0.090868");
 		madgraph2.readString(" set nevents "+sEvents);
 		madgraph2.readString(" set ebeam1 6500");
 		madgraph2.readString(" set ebeam2 6500");
 		pythia->setLHAupPtr(&madgraph2);
-		run(pythia, SMIH, nEvents);
+		run(pythia, SMIA, nEvents);
 		delete pythia;
 	}
 	else if(name=="A")
@@ -214,14 +239,17 @@ int main(int argc, char* argv[])
 		// madgraph3.setEvents(nEvents);
 		madgraph3.readString("import model Higgs_Effective_Couplings_FormFact");
 		madgraph3.readString("generate g g > h1 > t t~ / h QED=99 QCD=99");
+		// [59] tanb=0.860000 sba=1.000000 cba=0.000000 wA=30.931584 wH=17.434106 YMT=200.581395 YMB=4.042000 YMC=1.651163 YMM=0.090868 YMTAU=1.528220
 		// Note the need for a blank character before "set".
 		madgraph3.readString(" set cut_decays F");
 		madgraph3.readString(" set MT 172.5");
 		madgraph3.readString(" set MP 500");
-		madgraph3.readString(" set WH1 49.63");
-		madgraph3.readString(" set YMTAU 1.1351");
-		madgraph3.readString(" set YMT 260.8092");
-		madgraph3.readString(" set YMB 2.6825");
+		madgraph3.readString(" set WH1 30.931584");
+		madgraph3.readString(" set YMT 200.581395");
+		madgraph3.readString(" set YMB 4.042000");
+		madgraph3.readString(" set YMC 1.651163");
+		madgraph3.readString(" set YMTAU 1.528220");
+		madgraph3.readString(" set YMM 0.090868");
 		madgraph3.readString(" set nevents "+sEvents);
 		madgraph3.readString(" set ebeam1 6500");
 		madgraph3.readString(" set ebeam2 6500");
@@ -264,7 +292,7 @@ int main(int argc, char* argv[])
 		madgraph_valid.readString("import model Higgs_Effective_Couplings_FormFact");
 		madgraph_valid.readString("generate g g > t t~ / h1 HIW=1 HIG=1 QED=99 QCD=99");
 		// Note the need for a blank character before "set".
-		// [26] tanb=0.660000 sba=1.000000 cba=0.000000 wA=52.510675 wH=29.593605 YMT=-261.363636 YMB=3.102000 YMC=-2.151515 YMM=0.069736 YMTAU=1.172820
+		// [20] tanb=0.660000 sba=1.000000 cba=0.000000 wA=52.510675 wH=29.593605 YMT=-261.363636 YMB=3.102000 YMC=-2.151515 YMM=0.069736 YMTAU=1.172820
         madgraph_valid.readString(" set cut_decays F");
 		madgraph_valid.readString(" set MT 172.5");
 		madgraph_valid.readString(" set MP 500.");

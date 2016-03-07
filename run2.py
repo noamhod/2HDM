@@ -14,7 +14,7 @@ import os
 
 
 
-fSM   = TFile("tops.SM.root","READ")
+fSM   = TFile("tops.SM.500k.root","READ")
 tSM   = fSM.Get("SM")
 pSM   = ROOT.vector(TLorentzVector)()
 iSM   = std.vector(int)()
@@ -66,7 +66,7 @@ tnew.Branch("ymtau",ymtau)
 tnew.Branch("ymmu",ymmu)
 n=1
 for event in tSM:
-   if(n%1000==0): print "processed |SM|^2 and reweighting ", n
+   if(n%10000==0): print "processed |SM|^2 and reweighting ", n
    g1=event.p4[0]
    g2=event.p4[1]
    t1=event.p4[2]

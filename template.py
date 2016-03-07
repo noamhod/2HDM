@@ -293,6 +293,7 @@ def skipPoint(stanb,sinba,nameX,mX):
    if(nameX=="H" and mX==500 and sinba==1 and stanb=="0.54"): return True
    if(nameX=="H" and mX==500 and sinba==1 and stanb=="0.74"): return True ## not sure if this is needed
    if(nameX=="A" and mX==500 and sinba==1 and stanb=="0.64"): return True ## not sure if this is needed
+   if(nameX=="A" and mX==500 and sinba==1 and stanb=="0.92"): return True ## not sure if this is needed
    return False
 
 
@@ -321,6 +322,7 @@ THDM.setParameters(nameX,mX,cuts,type,sba)
 
 
 ### get the tree
+## example: 2HDM.A.500GeV.tree.500k.root
 # fSM = TFile("2HDM."+nameX+"."+str(mX)+"GeV.tree.50k.root","READ")
 fSM = TFile("2HDM."+nameX+"."+str(mX)+"GeV.tree.500k.root","READ")
 tSM = fSM.Get("SM")
@@ -394,7 +396,7 @@ for i in range(0,nparameters):
 
 n=1
 for event in tSM:
-   if(n%5000==0): print "processed |SM|^2 and reweighting ", n
+   if(n%10000==0): print "processed |SM|^2 and reweighting ", n
    t1=event.p4[2]
    t2=event.p4[3]
    mtt = (t1+t2).M()

@@ -15,13 +15,14 @@ import imp
 
 class t2HDM:
    """The 2HDM definitions"""
-   def __init__(self, nameX="A", mX=500, type=2, sba=1, mintanb=0.3):
+   def __init__(self, nameX="H", mX=500, type=2, sba=1, mintanb=0.3, maxtanb=25):
       self.nameX   = nameX
       self.mX      = mX
       self.type    = type
       self.sba     = sba
       self.mintanb = mintanb
-      self.cuts  = "m"+nameX+"=="+str(mX)+" && sba=="+str(sba)+" && tanb>="+str(mintanb)
+      self.maxtanb = maxtanb
+      self.cuts  = "m"+nameX+"=="+str(mX)+" && sba=="+str(sba)+" && tanb>="+str(mintanb)+" && tanb<="+str(maxtanb)
       self.cuts += " && TMath::ATan(tanb)>0. && TMath::ATan(tanb)<TMath::Pi()/2."
       self.cuts += " && TMath::Abs(cba)<=1."
       self.cuts += " && type=="+str(type)
@@ -162,7 +163,7 @@ def compileSM(mgpath,nameX,mX):
    X       = "matrix/"+nameX+"/"+str(mX)+"/"
    command = "./bin/mg5_aMC noam/proc_card_mg5_SM_partonlevel.minimal.dat"
    procdir = "ggtt-SM-partonlevel/SubProcesses/P1_gg_ttx_no_hh1/"
-   matxdir = "/Users/hod/MC/Pythia/pythia8215/examples/"+X
+   matxdir = os.getcwd()+"/"+X
    libdir  = matxdir+"SM/"
 
    global parameters
@@ -206,19 +207,13 @@ def compileSM(mgpath,nameX,mX):
 
 def compileX(index,mgpath,nameX,mX):
    X       = "matrix/"+nameX+"/"+str(mX)+"/"
-   command = ""
+   command = "./bin/mg5_aMC noam/proc_card_mg5_"+nameX+"_partonlevel.minimal.dat"
    procdir = ""
-   if(nameX=="A"):
-      command = "./bin/mg5_aMC noam/proc_card_mg5_A_partonlevel.minimal.dat"
-      procdir = "ggtt-A-partonlevel/SubProcesses/P1_gg_ttx_no_h/"
-   if(nameX=="H"):
-      command = "./bin/mg5_aMC noam/proc_card_mg5_H_partonlevel.minimal.dat"
-      procdir = "ggtt-H-partonlevel/SubProcesses/P1_gg_ttx_no_h1/"
-   if(nameX=="AH"):
-      command = "./bin/mg5_aMC noam/proc_card_mg5_AH_partonlevel.minimal.dat"
-      procdir = "ggtt-AH-partonlevel/SubProcesses/P1_gg_ttx/"
+   if(nameX=="A"):  procdir = "ggtt-A-partonlevel/SubProcesses/P1_gg_ttx_no_h/"
+   if(nameX=="H"):  procdir = "ggtt-H-partonlevel/SubProcesses/P1_gg_ttx_no_h1/"
+   if(nameX=="AH"): procdir = "ggtt-AH-partonlevel/SubProcesses/P1_gg_ttx/"
    
-   thisdir = "/Users/hod/MC/Pythia/pythia8215/examples/"
+   thisdir = os.getcwd()+"/"
    matxdir = thisdir+X
    libdir  = matxdir+str(index)+"/"
 
@@ -261,6 +256,8 @@ def compileX(index,mgpath,nameX,mX):
       for sold in replacements.keys():
          snew = replacements[sold]
          p = subprocess.Popen('sed -i -- "s/'+sold+'/'+snew+'/g" '+ofname, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)     
+         out, err = p.communicate()
+         # print err
 
       # execute the generation of the process
       p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -272,12 +269,16 @@ def compileX(index,mgpath,nameX,mX):
          ### cahnge the makefile, make and copy
          p = subprocess.Popen('sed -i -e "s/MENUM)py/MENUM)'+nameX+str(index)+'py/g" '+mgpath+procdir+'makefile', shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
          out, err = p.communicate()
+         # print err
          p = subprocess.Popen("make matrix2"+nameX+str(index)+"py.so", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
          out, err = p.communicate()
+         # print err
          p = subprocess.Popen("cp matrix2"+nameX+str(index)+"py.so "+libdir, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
          out, err = p.communicate()
+         # print err
          p = subprocess.Popen("cp ../../Cards/*.dat "+libdir, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
          out, err = p.communicate()
+         # print err
 
 
 modules = {}
