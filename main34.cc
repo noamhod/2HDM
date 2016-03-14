@@ -29,7 +29,7 @@ using namespace Pythia8;
 
 enum proc
 {
-	SM,SMNLO,SMH,SMIA,SMIH,IH,I,H,IA,A,SMIA_valid,SMIH_valid
+	SM,MG_SM,SMNLO,SMH,SMIA,SMIH,IH,I,H,IA,A,SMIA_valid,SMIH_valid
 };
 
 //==========================================================================
@@ -53,6 +53,7 @@ void setTree(int name)
 	switch(name)
 	{
 		case SM  :       initFile("SM");         break;
+		case MG_SM:      initFile("MG_SM");      break;
 		case SMNLO:      initFile("SMNLO");      break;
 		case SMH :       initFile("SMH");        break;
 		case SMIA:       initFile("SMIA");       break;
@@ -159,7 +160,7 @@ int main(int argc, char* argv[])
 
   // Pythia object to be used a couple of times
   Pythia* pythia;
-  int nEvents = 10000;
+  int nEvents = 500000;
   string sEvents = "";
   stringstream strm;
   strm << nEvents;
@@ -167,7 +168,7 @@ int main(int argc, char* argv[])
 
 	if(name=="SM")
 	{
-		// Produce leading-order gg->tt SM events with MadGraph 5.
+		// Produce leading-order gg->tt SM events with MadGraph 5 using the 2HDM model.
 		pythia = new Pythia();
 		system("rm -rf madgraphrun1");
 		LHAupMadgraph madgraph1(pythia, true, "madgraphrun1", exe);
@@ -184,9 +185,28 @@ int main(int argc, char* argv[])
 		run(pythia, SMNLO, nEvents);
 		delete pythia;
 	}
-	if(name=="SMNLO")
+	else if(name=="MG_SM")
 	{
-		// Produce leading-order gg->tt SM events with MadGraph 5.
+		// Produce leading-order gg->tt SM events with MadGraph 5 using the MG shipped SM model.
+		pythia = new Pythia();
+		system("rm -rf madgraphrun_mgsm");
+		LHAupMadgraph madgraph_mgsm(pythia, true, "madgraphrun_mgsm", exe);
+		// madgraph_mgsm.setEvents(nEvents);
+		madgraph_mgsm.readString("import model sm");
+		madgraph_mgsm.readString("generate g g > t t~");
+		// Note the need for a blank character before "set".
+		madgraph_mgsm.readString(" set cut_decays F");
+		madgraph_mgsm.readString(" set MT 172.5");
+		madgraph_mgsm.readString(" set nevents "+sEvents);
+		madgraph_mgsm.readString(" set ebeam1 6500");
+		madgraph_mgsm.readString(" set ebeam2 6500");
+		pythia->setLHAupPtr(&madgraph_mgsm);
+		run(pythia, MG_SM, nEvents);
+		delete pythia;
+	}
+	else if(name=="SMNLO")
+	{
+		// Produce leading-order gg->tt SM events with MadGraph 5 using the MG shipped SM-loop model.
 		pythia = new Pythia();
 		system("rm -rf madgraphrun_nlo");
 		LHAupMadgraph madgraph_nlo(pythia, true, "madgraphrun_nlo", exe);

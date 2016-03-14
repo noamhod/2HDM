@@ -15,7 +15,7 @@ import imp
 
 class t2HDM:
    """The 2HDM definitions"""
-   def __init__(self, nameX="H", mX=500, type=2, sba=1, mintanb=0.3, maxtanb=25):
+   def __init__(self, nameX="H", mX=750, type=2, sba=1, mintanb=0.3, maxtanb=25):
       self.nameX   = nameX
       self.mX      = mX
       self.type    = type
@@ -26,7 +26,7 @@ class t2HDM:
       self.cuts += " && TMath::ATan(tanb)>0. && TMath::ATan(tanb)<TMath::Pi()/2."
       self.cuts += " && TMath::Abs(cba)<=1."
       self.cuts += " && type=="+str(type)
-      self.cuts += " && (status&3)==0" 
+      self.cuts += " && (status&7)==0" 
    def constrainWidth(wmin,wmax):
       self.cuts += " && (width_"+nameX+"/m"+nameX+">"+str(wmin)+" && width_"+nameX+"/m"+nameX+"<"+str(wmax)+")"
 

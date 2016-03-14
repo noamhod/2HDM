@@ -8,5 +8,6 @@
 ./getf.sh run3.py
 ./getf.sh template.py
 ./getf.sh testTree.py
+./getf.sh testModelSM.py
 ./getf.sh main34.cc
 ./getf.sh Makefile

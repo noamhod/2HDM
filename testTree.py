@@ -2,7 +2,6 @@
 import ROOT
 from ROOT import std, gROOT, gStyle, gPad, TCanvas, TH1, TH1D, TH2D, TLegend, TLine, TFile, TTree, TLorentzVector, TMath, TVirtualPad, TEventList
 
-
 fXX = TFile("tops.SMIA.tmp.10k.root","READ")
 tXX = fXX.Get("SMIA")
 pXX = ROOT.vector(TLorentzVector)()
