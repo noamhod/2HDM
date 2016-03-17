@@ -11,6 +11,11 @@ Prequisits:
 Put all files found here in the pythia8215/examples directory and have fun :)
 
 To run,
+- edit the number of events to generate in main34.cc
+- make main34
+- execute `./main34 SM`
+- execute `./main34 H`
+- etc...
 - edit the t2HDM class in THDM.py with the parameters of the models or load it with other parameters later
 - execute `python makeMatrix.py` to make all libraries for this configuration
 - execute `python run2.py` to reweight the SM sample into this configuration and store the weights in the tree
