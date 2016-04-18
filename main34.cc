@@ -160,7 +160,7 @@ int main(int argc, char* argv[])
 
   // Pythia object to be used a couple of times
   Pythia* pythia;
-  int nEvents = 500000;
+  int nEvents = 1000;
   string sEvents = "";
   stringstream strm;
   strm << nEvents;

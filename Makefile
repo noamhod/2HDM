@@ -54,7 +54,8 @@ $(PREFIX_LIB)/libpythia8.a :
 
 # Examples without external dependencies.
 main% : main%.cc $(PREFIX_LIB)/libpythia8.a
-	$(CXX) $^ -o $@ $(CXX_COMMON)
+	export LD_LIBRARY_PATH=$$LD_LIBRARY_PATH:$(ROOT_LIB);\
+	$(CXX) $^ -o $@ -w -I$(ROOT_INCLUDE) $(CXX_COMMON) -Wl,-rpath $(ROOT_LIB) -L/Applications/root5/root/lib -lGui -lCore -lCint -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -lpthread -stdlib=libc++ -lm -ldl
 
 # GZIP (required).
 main34: $$@.cc $(PREFIX_LIB)/libpythia8.a

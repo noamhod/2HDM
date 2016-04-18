@@ -15,7 +15,7 @@ import imp
 
 class t2HDM:
    """The 2HDM definitions"""
-   def __init__(self, nameX="H", mX=750, type=2, sba=1, mintanb=0.3, maxtanb=25):
+   def __init__(self, nameX="A", mX=750, type=2, sba=1, mintanb=0.3, maxtanb=25):
       self.nameX   = nameX
       self.mX      = mX
       self.type    = type
@@ -111,7 +111,7 @@ def couplings(type,nameX,fermion,tanb,sba,cba):
    return g
 
 def setParameters(nameX,mX,cuts="",type=2,sba=1):
-   f = TFile("thdm_grid_v163_13TeV.root","READ")
+   f = TFile("/Users/hod/GitHub/2HDM/thdm_grid_v163_13TeV.root","READ")
    t = f.Get("thdm")
    b_tb  = NUMPY.zeros(1, dtype=float)
    b_sba = NUMPY.zeros(1, dtype=float)
@@ -282,7 +282,7 @@ def compileX(index,mgpath,nameX,mX):
 
 
 modules = {}
-def setModules(basepath,libmatrix,nameX,nX,libs="All",index=-1):
+def setModules(libmatrix,nameX,nX,libs="All",index=-1):
    if(libs=="All" or libs=="AllX"):
       for i in range (0,nX):
          name = 'matrix2'+nameX+str(i)+'py'
@@ -290,7 +290,8 @@ def setModules(basepath,libmatrix,nameX,nX,libs="All",index=-1):
          print "changing dir to: "+libmatrix+sindex+"/"
          with cd(libmatrix+sindex+"/"):
             print "in "+os.getcwd()+", trying to import ",name
-            module_info = imp.find_module(name,[basepath+"/"+libmatrix+str(i)+"/"])
+            # module_info = imp.find_module(name,[basepath+"/"+libmatrix+str(i)+"/"])
+            module_info = imp.find_module(name,[libmatrix+str(i)+"/"])
             modules.update({name:imp.load_module(name, *module_info)})
             modules[name].initialise("param_card.dat")
             print "Successfully initialised ",name
@@ -299,7 +300,8 @@ def setModules(basepath,libmatrix,nameX,nX,libs="All",index=-1):
       sindex = str(index)
       with cd(libmatrix+sindex+"/"):
          print "in "+os.getcwd()+", trying to import ",name
-         module_info = imp.find_module(name,[basepath+"/"+libmatrix+str(index)+"/"])
+         # module_info = imp.find_module(name,[basepath+"/"+libmatrix+str(index)+"/"])
+         module_info = imp.find_module(name,[libmatrix+str(index)+"/"])
          modules.update({name:imp.load_module(name, *module_info)})
          modules[name].initialise("param_card.dat")
          print "Successfully initialised ",name
@@ -307,16 +309,21 @@ def setModules(basepath,libmatrix,nameX,nX,libs="All",index=-1):
       name = 'matrix2SMpy'
       with cd(libmatrix+"SM/"):
          print "in "+os.getcwd()+", trying to import "+name
-         module_info = imp.find_module(name,[basepath+"/"+libmatrix+"SM/"])
+         #print "basepath+libmatrix=",basepath+"/"+libmatrix
+         # module_info = imp.find_module(name,[basepath+"/"+libmatrix+"SM/"])
+         module_info = imp.find_module(name,[libmatrix+"SM/"])
          modules.update({name:imp.load_module(name, *module_info)})
          modules[name].initialise("param_card.dat")
          print "Successfully initialised ",name
 
 
 def testImport(nameX,mX,index=-1):
-   libmatrix = "matrix/"+nameX+"/"+str(mX)+"/"
-   if(index<0): setModules(os.getcwd(),libmatrix,nameX,len(parameters),"SM",index)
-   else:        setModules(os.getcwd(),libmatrix,nameX,len(parameters),"X",index)
+#   libmatrix = "matrix/"+nameX+"/"+str(mX)+"/"
+#   if(index<0): setModules(os.getcwd(),libmatrix,nameX,len(parameters),"SM",index)
+#   else:        setModules(os.getcwd(),libmatrix,nameX,len(parameters),"X",index)
+   libmatrix = "/Users/hod/GitHub/2HDM/matrix/"+nameX+"/"+str(mX)+"/"
+   if(index<0): setModules(libmatrix,nameX,len(parameters),"SM",index)
+   else:        setModules(libmatrix,nameX,len(parameters),"X",index)
    alphaS = 0.13
    nhel = 0 # means sum over all helicity
    p = [[   0.5000000E+03,  0.0000000E+00,  0.0000000E+00,  0.5000000E+03],
