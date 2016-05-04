@@ -13,7 +13,8 @@ import os
 
 ### make the definitions
 mX     = THDM.model.mX
+sba    = THDM.model.sba
 nameX  = THDM.model.nameX
 mgpath = THDM.model.mgpath
 ### make the libraries
-THDM.testTHDM(mgpath,nameX,mX)
+THDM.testTHDM(mgpath)

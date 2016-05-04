@@ -31,7 +31,7 @@ cuts      = THDM.model.cuts
 mgpath    = THDM.model.mgpath
 alphaS    = THDM.model.alphaS
 nhel      = THDM.model.nhel
-libmatrix = "matrix/"+nameX+"/"+str(mX)+"/"
+libmatrix = "matrix/"+nameX+"/"+str(mX)+"/"+str(sba)+"/"
 THDM.setParameters(nameX,mX,cuts,type,sba)
 
 

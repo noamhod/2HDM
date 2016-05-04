@@ -15,7 +15,7 @@ import imp
 
 class t2HDM:
    """The 2HDM definitions"""
-   def __init__(self, nameX="A", mX=750, type=2, sba=1, mintanb=0.3, maxtanb=25):
+   def __init__(self, nameX="A", mX=750, type=2, sba=1, mintanb=0.3, maxtanb=7):
       self.nameX   = nameX
       self.mX      = mX
       self.type    = type
@@ -26,7 +26,8 @@ class t2HDM:
       self.cuts += " && TMath::ATan(tanb)>0. && TMath::ATan(tanb)<TMath::Pi()/2."
       self.cuts += " && TMath::Abs(cba)<=1."
       self.cuts += " && type=="+str(type)
-      self.cuts += " && (status&7)==0" 
+      # self.cuts += " && (status&7)==0" 
+      self.cuts += " && (status&3)==0" 
    def constrainWidth(wmin,wmax):
       self.cuts += " && (width_"+nameX+"/m"+nameX+">"+str(wmin)+" && width_"+nameX+"/m"+nameX+"<"+str(wmax)+")"
 
@@ -159,8 +160,8 @@ def setParameters(nameX,mX,cuts="",type=2,sba=1):
    print "N="+str(len(parameters))+" parameters set !"
 
 
-def compileSM(mgpath,nameX,mX):	
-   X       = "matrix/"+nameX+"/"+str(mX)+"/"
+def compileSM(mgpath,nameX,mX,sba):	
+   X       = "matrix/"+nameX+"/"+str(mX)+"/"+str(sba)+"/"
    command = "./bin/mg5_aMC noam/proc_card_mg5_SM_partonlevel.minimal.dat"
    procdir = "ggtt-SM-partonlevel/SubProcesses/P1_gg_ttx_no_hh1/"
    matxdir = os.getcwd()+"/"+X
@@ -205,8 +206,8 @@ def compileSM(mgpath,nameX,mX):
          out, err = p.communicate()
 
 
-def compileX(index,mgpath,nameX,mX):
-   X       = "matrix/"+nameX+"/"+str(mX)+"/"
+def compileX(index,mgpath,nameX,mX,sba):
+   X       = "matrix/"+nameX+"/"+str(mX)+"/"+str(sba)+"/"
    command = "./bin/mg5_aMC noam/proc_card_mg5_"+nameX+"_partonlevel.minimal.dat"
    procdir = ""
    if(nameX=="A"):  procdir = "ggtt-A-partonlevel/SubProcesses/P1_gg_ttx_no_h/"
@@ -317,11 +318,11 @@ def setModules(libmatrix,nameX,nX,libs="All",index=-1):
          print "Successfully initialised ",name
 
 
-def testImport(nameX,mX,index=-1):
-#   libmatrix = "matrix/"+nameX+"/"+str(mX)+"/"
+def testImport(nameX,mX,sba,index=-1):
+#   libmatrix = "matrix/"+nameX+"/"+str(mX)+"/"+str(sba)+"/"
 #   if(index<0): setModules(os.getcwd(),libmatrix,nameX,len(parameters),"SM",index)
 #   else:        setModules(os.getcwd(),libmatrix,nameX,len(parameters),"X",index)
-   libmatrix = "/Users/hod/GitHub/2HDM/matrix/"+nameX+"/"+str(mX)+"/"
+   libmatrix = "/Users/hod/GitHub/2HDM/matrix/"+nameX+"/"+str(mX)+"/"+str(sba)+"/"
    if(index<0): setModules(libmatrix,nameX,len(parameters),"SM",index)
    else:        setModules(libmatrix,nameX,len(parameters),"X",index)
    alphaS = 0.13
@@ -338,34 +339,31 @@ def testImport(nameX,mX,index=-1):
    return me2
 
 
-def makeSM(mgpath,nameX,mX,test=False):
-   compileSM(mgpath,nameX,mX)
+def makeSM(mgpath,nameX,mX,sba,test=False):
+   compileSM(mgpath,nameX,mX,sba)
    if(test):
-      me2 = testImport(nameX,mX)
+      me2 = testImport(nameX,mX,sba)
       print "Done making library SM -> test ME^2="+str(me2)
    else:
       print "Done making library SM"
 
 
-def make2HDM(mgpath,nameX,mX,test=False):
+def make2HDM(mgpath,nameX,mX,sba,test=False):
    for i in range(0,len(parameters)):
-      compileX(i,mgpath,nameX,mX)
+      compileX(i,mgpath,nameX,mX,sba)
       if(test):
-        me2 = testImport(nameX,mX,i)
+        me2 = testImport(nameX,mX,sba,i)
         print "Done making library "+str(i)+" -> test ME^2="+str(me2)
       else:
         print "Done making library "+str(i)
 
 
-def makeAll(mgpath,nameX,mX,test=False):	
-   make2HDM(mgpath,nameX,mX,test)
-   makeSM(mgpath,nameX,mX,test)
+def makeAll(mgpath,nameX,mX,sba,test=False):	
+   make2HDM(mgpath,nameX,mX,sba,test)
+   makeSM(mgpath,nameX,mX,sba,test)
 
 
-def testTHDM(mgpath,nameX,mX):
-   type=model.type
-   sba=model.sba
-   cuts = model.cuts
-   setParameters(nameX,mX,cuts,type,sba)
+def testTHDM(mgpath):
+   setParameters(model.nameX,model.mX,model.cuts,model.type,model.sba)
    print parameters
-   makeAll(mgpath,nameX,mX,True)
+   makeAll(mgpath,model.nameX,model.mX,model.sba,True)
