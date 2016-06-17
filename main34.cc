@@ -29,7 +29,7 @@ using namespace Pythia8;
 
 enum proc
 {
-	SM,MG_SM,SMNLO,SMH,SMIA,SMIH,IH,I,H,IA,A,SMIA_valid,SMIH_valid
+	SM,MG_SM,SMNLO,SM_nobmass,SMH,SMIA,SMIH,SMIHjj,IH,I,H,IA,A,SMIA_valid,SMIH_valid
 };
 
 //==========================================================================
@@ -55,9 +55,11 @@ void setTree(int name)
 		case SM  :       initFile("SM");         break;
 		case MG_SM:      initFile("MG_SM");      break;
 		case SMNLO:      initFile("SMNLO");      break;
+		case SM_nobmass: initFile("SM_nobmass"); break;
 		case SMH :       initFile("SMH");        break;
 		case SMIA:       initFile("SMIA");       break;
 		case SMIH:       initFile("SMIH");       break;
+		case SMIHjj:     initFile("SMIHjj");     break;
 		case IH:         initFile("IH");         break;
 		case I:          initFile("I");          break;
 		case H:          initFile("H");          break;
@@ -149,22 +151,22 @@ int main(int argc, char* argv[])
 	string name = argv[1];
 	_INF(1,"arg="<<name);
 	
-  // The name of the MadGraph5_aMC@NLO executable.
-  // You must prepend this string with the path to the executable
-  // on your local installation, or otherwise make it available.
-  string mgpath  = "/Users/hod/MC/MadGraph/MG5_aMC_v2_3_3_tests/";
-  string exe     = mgpath+"bin/mg5_aMC";
-  string model   = mgpath+"models/Higgs_Effective_Couplings_FormFact/";
-  string command = "/bin/cp -f "+model+"parameters.py_ORIG  "+model+"parameters.py";
-  system(command.c_str());
-
-  // Pythia object to be used a couple of times
-  Pythia* pythia;
-  int nEvents = 1000;
-  string sEvents = "";
-  stringstream strm;
-  strm << nEvents;
-  strm >> sEvents;
+	// The name of the MadGraph5_aMC@NLO executable.
+	// You must prepend this string with the path to the executable
+	// on your local installation, or otherwise make it available.
+	string mgpath  = "/Users/hod/MC/MadGraph/MG5_aMC_v2_3_3_tests/";
+	string exe     = mgpath+"bin/mg5_aMC";
+	string model   = mgpath+"models/Higgs_Effective_Couplings_FormFact/";
+	string command = "/bin/cp -f "+model+"parameters.py_ORIG  "+model+"parameters.py";
+	system(command.c_str());
+	
+	// Pythia object to be used a couple of times
+	Pythia* pythia;
+	int nEvents = 2;
+	string sEvents = "";
+	stringstream strm;
+	strm << nEvents;
+	strm >> sEvents;
 
 	if(name=="SM")
 	{
@@ -220,7 +222,30 @@ int main(int argc, char* argv[])
 		madgraph_nlo.readString(" set ebeam1 6500");
 		madgraph_nlo.readString(" set ebeam2 6500");
 		pythia->setLHAupPtr(&madgraph_nlo);
-		run(pythia, SM, nEvents);
+		run(pythia, SMNLO, nEvents);
+		delete pythia;
+	}
+	else if(name=="SM_nobmass")
+	{
+		// Produce leading-order gg->tt SM events with MadGraph 5 using the MG shipped SM-loop model.
+		pythia = new Pythia();
+		system("rm -rf madgraphrun_smnobmass");
+		LHAupMadgraph madgraph_smnobmass(pythia, true, "madgraphrun_smnobmass", exe);
+		// madgraph_smnobmass.setEvents(nEvents);
+		madgraph_smnobmass.readString("import model sm-no_b_mass");
+		madgraph_smnobmass.readString("define j = g u c d s b u~ c~ d~ s~ b~");
+		madgraph_smnobmass.readString("generate g g > t t~ @0");
+		madgraph_smnobmass.readString("add process g g > t t~ j @1");
+		madgraph_smnobmass.readString("add process g g > t t~ j j @2");
+		// Note the need for a blank character before "set".
+		madgraph_smnobmass.readString(" set cut_decays F");
+		madgraph_smnobmass.readString(" set dynamical_scale_choice 3");
+		madgraph_smnobmass.readString(" set MT 172.5");
+		madgraph_smnobmass.readString(" set nevents "+sEvents);
+		madgraph_smnobmass.readString(" set ebeam1 6500");
+		madgraph_smnobmass.readString(" set ebeam2 6500");
+		pythia->setLHAupPtr(&madgraph_smnobmass);
+		run(pythia, SM_nobmass, nEvents);
 		delete pythia;
 	}
 	else if(name=="SMIA")
@@ -329,6 +354,40 @@ int main(int argc, char* argv[])
 		madgraph_valid.readString(" set ebeam2 6500");
 		pythia->setLHAupPtr(&madgraph_valid);
 		run(pythia, SMIH_valid, nEvents);
+		delete pythia;
+	}
+	else if(name=="SMIHjj")
+	{
+		// Produce leading-order gg->tt SM+A events with MadGraph 5.
+		pythia = new Pythia();
+		system("rm -rf madgraphrun_SMIHjj");
+		LHAupMadgraph madgraph_SMIHjj(pythia, true, "madgraphrun_SMIHjj", exe);
+		// madgraph_valid.setEvents(nEvents);
+		madgraph_SMIHjj.readString("import model Higgs_Effective_Couplings_FormFact");
+		// madgraph_SMIHjj.readString("generate g g > t t~ / h1 HIW=1 HIG=1 QED=99 QCD=99");
+		madgraph_SMIHjj.readString("define j = g u c d s b u~ c~ d~ s~ b~");
+		madgraph_SMIHjj.readString("define p = g u c d s b u~ c~ d~ s~ b~");
+		madgraph_SMIHjj.readString("generate p p > t t~ / h1 HIW=1 HIG=1 QED=99 QCD=99 @0");
+		madgraph_SMIHjj.readString("add process p p > t t~ j / h1 HIW=1 HIG=1 QED=99 QCD=99 @1");
+		madgraph_SMIHjj.readString("add process p p > t t~ j j / h1 HIW=1 HIG=1 QED=99 QCD=99 @2");
+		// Note the need for a blank character before "set".
+		// [20] tanb=0.660000 sba=1.000000 cba=0.000000 wA=52.510675 wH=29.593605 YMT=-261.363636 YMB=3.102000 YMC=-2.151515 YMM=0.069736 YMTAU=1.172820
+        madgraph_SMIHjj.readString(" set cut_decays F");
+		madgraph_SMIHjj.readString(" set MT 172.5");
+		madgraph_SMIHjj.readString(" set MP 500.");
+		madgraph_SMIHjj.readString(" set MH 500.");
+		madgraph_SMIHjj.readString(" set WH 29.593605");
+		madgraph_SMIHjj.readString(" set WH1 52.510675");
+		madgraph_SMIHjj.readString(" set YMTAU 1.172820");
+		madgraph_SMIHjj.readString(" set YMM 0.069736");
+		madgraph_SMIHjj.readString(" set YMC -2.151515");
+		madgraph_SMIHjj.readString(" set YMB 3.102000");
+		madgraph_SMIHjj.readString(" set YMT -261.363636"); 
+		madgraph_SMIHjj.readString(" set nevents "+sEvents);
+		madgraph_SMIHjj.readString(" set ebeam1 6500");
+		madgraph_SMIHjj.readString(" set ebeam2 6500");
+		pythia->setLHAupPtr(&madgraph_SMIHjj);
+		run(pythia, SMIHjj, nEvents);
 		delete pythia;
 	}
 	else

@@ -1,8 +1,15 @@
-import matrix2py
+import sys
+# matrixpath = "matrix/H/750/1/SM/ttx/"
+matrixpath = "matrix/H/750/1/0/ttx/"
+sys.path.append(matrixpath)
+sys.path.append('/Users/hod/MC/LHAPDF/install-karl/lib/python2.7/site-packages/')
+# import matrix2SMttxpy as matrix
+import matrix2H0ttxpy as matrix
+import lhapdf
 import argparse
 parser = argparse.ArgumentParser(description='run matrix !')
 #########
-parser.add_argument('-path',  metavar='--path',  required=True, help='library path')
+# parser.add_argument('-path',  metavar='--path',  required=True, help='library path')
 #########
 parser.add_argument('-g1e',  metavar='gluon[1].e',  required=True, help='g[1].e')
 parser.add_argument('-g1px', metavar='gluon[1].px', required=True, help='g[1].px')
@@ -35,7 +42,7 @@ def invert_momenta(p):
          new_p[j][i] = x
    return new_p
 
-matrix2py.initialise(args.path+'/param_card.dat')
+matrix.initialise(matrixpath+'/param_card.dat')
 p = [[ args.g1e, args.g1px, args.g1py, args.g1pz ],
      [ args.g2e, args.g2px, args.g2py, args.g2pz ],
      [ args.t1e, args.t1px, args.t1py, args.t1pz ],
@@ -49,7 +56,11 @@ P=invert_momenta(p)
 #     [   0.5000000E+03,  0.1109243E+03,  0.4448308E+03, -0.1995529E+03],
 #     [   0.5000000E+03, -0.1109243E+03, -0.4448308E+03,  0.1995529E+03]]
 
-alphas = 0.13
+# alphaS = lhapdf.mkBareAlphaS("analytic")
+alphaS = lhapdf.mkAlphaS("NNPDF30_nlo_as_0118")
+# alphaS.setOrderQCD(1)
+alphas = alphaS.alphasQ(236)
+# alphas = 0.13
 nhel   = 0 # means sum over all helicity                                                                                                                  
-me2 = matrix2py.get_me(P, alphas, nhel)
+me2 = matrix.get_me(P, alphas, nhel)
 print me2
