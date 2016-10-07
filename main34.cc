@@ -29,7 +29,7 @@ using namespace Pythia8;
 
 enum proc
 {
-	SM,MG_SM,SMNLO,SM_nobmass,SMH,SMIA,SMIH,SMIHjj,IH,I,H,IA,A,SMIA_valid,SMIH_valid
+	SM,SM_8TeV,MG_SM,SMNLO,SM_nobmass, SM_nobmass_8TeV,SMH,SMIA,SMIA_8TeV,SMIH,SMIHjj,IH,I,H,IA,A,SMIA_valid,SMIH_valid
 };
 
 //==========================================================================
@@ -37,6 +37,9 @@ TFile* file;
 TTree* tree;
 vector<TLorentzVector>* p4;
 vector<int>*            id;
+float                   Q;
+float                   Q2;
+float                   aS;
 
 void initFile(TString name)
 {
@@ -47,17 +50,20 @@ void setTree(int name)
 {	
 	gROOT->ProcessLine(".L Loader.C+"); // for the vector branches...
 	
-	p4  = new vector<TLorentzVector>;
+	p4 = new vector<TLorentzVector>;
 	id = new vector<int>;
 	
 	switch(name)
 	{
 		case SM  :       initFile("SM");         break;
+		case SM_8TeV:    initFile("SM_8TeV");    break;
 		case MG_SM:      initFile("MG_SM");      break;
 		case SMNLO:      initFile("SMNLO");      break;
 		case SM_nobmass: initFile("SM_nobmass"); break;
+		case SM_nobmass_8TeV: initFile("SM_nobmass_8TeV"); break;
 		case SMH :       initFile("SMH");        break;
 		case SMIA:       initFile("SMIA");       break;
+		case SMIA_8TeV:  initFile("SMIA_8TeV");  break;
 		case SMIH:       initFile("SMIH");       break;
 		case SMIHjj:     initFile("SMIHjj");     break;
 		case IH:         initFile("IH");         break;
@@ -71,11 +77,17 @@ void setTree(int name)
 	}	
 	tree->Branch("p4",&p4);
 	tree->Branch("id",&id);
+	tree->Branch("Q",&Q);
+	tree->Branch("Q2",&Q2);
+	tree->Branch("aS",&aS);
 }
 void clearTree()
 {
 	p4->clear();
 	id->clear();
+	Q  = -1;
+	Q2 = -1;
+	aS = -1;
 }
 void fillTree()
 {
@@ -101,8 +113,15 @@ void run(Pythia* pythia, int name, int nEvent) {
   setTree(name);
 
   for (int iEvent = 0; iEvent < nEvent; ++iEvent) {
-    if (!pythia->next()) continue;   
-	clearTree();
+    if (!pythia->next()) continue;
+    /////////////////  
+	clearTree(); ////
+	/////////////////
+	
+	Q  = pythia->info.QRen();
+	Q2 = pythia->info.Q2Ren();
+	aS = pythia->info.alphaS();
+	
     int iGlu1(0), iGlu2(0);
 	int iTop1(0), iTop2(0);
 	// cout << "-----------------" << endl;
@@ -162,11 +181,13 @@ int main(int argc, char* argv[])
 	
 	// Pythia object to be used a couple of times
 	Pythia* pythia;
-	int nEvents = 2;
+	int nEvents = 405000;
 	string sEvents = "";
 	stringstream strm;
 	strm << nEvents;
 	strm >> sEvents;
+	
+	bool dynamical_scale_choice3 = false;
 
 	if(name=="SM")
 	{
@@ -179,12 +200,33 @@ int main(int argc, char* argv[])
 		madgraph1.readString("generate g g > t t~ / h h1 HIW=0 HIG=0 QED=99 QCD=99");
 		// Note the need for a blank character before "set".
 		madgraph1.readString(" set cut_decays F");
+		if(dynamical_scale_choice3) madgraph1.readString(" set dynamical_scale_choice 3");
 		madgraph1.readString(" set MT 172.5");
 		madgraph1.readString(" set nevents "+sEvents);
 		madgraph1.readString(" set ebeam1 6500");
 		madgraph1.readString(" set ebeam2 6500");
 		pythia->setLHAupPtr(&madgraph1);
 		run(pythia, SMNLO, nEvents);
+		delete pythia;
+	}
+	if(name=="SM_8TeV")
+	{
+		// Produce leading-order gg->tt SM events with MadGraph 5 using the 2HDM model.
+		pythia = new Pythia();
+		system("rm -rf madgraphrun_SM_8TeV");
+		LHAupMadgraph madgraph_SM_8TeV(pythia, true, "madgraphrun_SM_8TeV", exe);
+		// madgraph_SM_8TeV.setEvents(nEvents);
+		madgraph_SM_8TeV.readString("import model Higgs_Effective_Couplings_FormFact");
+		madgraph_SM_8TeV.readString("generate g g > t t~ / h h1 HIW=0 HIG=0 QED=99 QCD=99");
+		// Note the need for a blank character before "set".
+		madgraph_SM_8TeV.readString(" set cut_decays F");
+		if(dynamical_scale_choice3) madgraph_SM_8TeV.readString(" set dynamical_scale_choice 3");
+		madgraph_SM_8TeV.readString(" set MT 172.5");
+		madgraph_SM_8TeV.readString(" set nevents "+sEvents);
+		madgraph_SM_8TeV.readString(" set ebeam1 4000");
+		madgraph_SM_8TeV.readString(" set ebeam2 4000");
+		pythia->setLHAupPtr(&madgraph_SM_8TeV);
+		run(pythia, SM_8TeV, nEvents);
 		delete pythia;
 	}
 	else if(name=="MG_SM")
@@ -198,6 +240,7 @@ int main(int argc, char* argv[])
 		madgraph_mgsm.readString("generate g g > t t~");
 		// Note the need for a blank character before "set".
 		madgraph_mgsm.readString(" set cut_decays F");
+		if(dynamical_scale_choice3) madgraph_mgsm.readString(" set dynamical_scale_choice 3");
 		madgraph_mgsm.readString(" set MT 172.5");
 		madgraph_mgsm.readString(" set nevents "+sEvents);
 		madgraph_mgsm.readString(" set ebeam1 6500");
@@ -217,6 +260,7 @@ int main(int argc, char* argv[])
 		madgraph_nlo.readString("generate g g > t t~ [QCD]");
 		// Note the need for a blank character before "set".
 		madgraph_nlo.readString(" set cut_decays F");
+		if(dynamical_scale_choice3) madgraph_nlo.readString(" set dynamical_scale_choice 3");
 		madgraph_nlo.readString(" set MT 172.5");
 		madgraph_nlo.readString(" set nevents "+sEvents);
 		madgraph_nlo.readString(" set ebeam1 6500");
@@ -239,13 +283,37 @@ int main(int argc, char* argv[])
 		madgraph_smnobmass.readString("add process g g > t t~ j j @2");
 		// Note the need for a blank character before "set".
 		madgraph_smnobmass.readString(" set cut_decays F");
-		madgraph_smnobmass.readString(" set dynamical_scale_choice 3");
+		if(dynamical_scale_choice3) madgraph_smnobmass.readString(" set dynamical_scale_choice 3");
 		madgraph_smnobmass.readString(" set MT 172.5");
 		madgraph_smnobmass.readString(" set nevents "+sEvents);
 		madgraph_smnobmass.readString(" set ebeam1 6500");
 		madgraph_smnobmass.readString(" set ebeam2 6500");
 		pythia->setLHAupPtr(&madgraph_smnobmass);
 		run(pythia, SM_nobmass, nEvents);
+		delete pythia;
+	}
+	else if(name=="SM_nobmass_8TeV")
+	{
+		// Produce leading-order gg->tt SM events with MadGraph 5 using the MG shipped SM-loop model.
+		pythia = new Pythia();
+		system("rm -rf madgraphrun_smnobmass_8TeV");
+		LHAupMadgraph madgraph_smnobmass_8TeV(pythia, true, "madgraphrun_smnobmass_8TeV", exe);
+		// madgraph_smnobmass.setEvents(nEvents);
+		madgraph_smnobmass_8TeV.readString("import model sm-no_b_mass");
+		// madgraph_smnobmass_8TeV.readString("define j = g u c d s b u~ c~ d~ s~ b~");
+		madgraph_smnobmass_8TeV.readString("generate g g > t t~");
+		// madgraph_smnobmass_8TeV.readString("generate g g > t t~ @0");
+		// madgraph_smnobmass_8TeV.readString("add process g g > t t~ j @1");
+		// madgraph_smnobmass_8TeV.readString("add process g g > t t~ j j @2");
+		// Note the need for a blank character before "set".
+		madgraph_smnobmass_8TeV.readString(" set cut_decays F");
+		if(dynamical_scale_choice3) madgraph_smnobmass_8TeV.readString(" set dynamical_scale_choice 3");
+		madgraph_smnobmass_8TeV.readString(" set MT 172.5");
+		madgraph_smnobmass_8TeV.readString(" set nevents "+sEvents);
+		madgraph_smnobmass_8TeV.readString(" set ebeam1 4000");
+		madgraph_smnobmass_8TeV.readString(" set ebeam2 4000");
+		pythia->setLHAupPtr(&madgraph_smnobmass_8TeV);
+		run(pythia, SM_nobmass_8TeV, nEvents);
 		delete pythia;
 	}
 	else if(name=="SMIA")
@@ -260,6 +328,7 @@ int main(int argc, char* argv[])
 		// Note the need for a blank character before "set".
 		// [59] tanb=0.860000 sba=1.000000 cba=0.000000 wA=30.931584 wH=17.434106 YMT=200.581395 YMB=4.042000 YMC=1.651163 YMM=0.090868 YMTAU=1.528220
 		madgraph2.readString(" set cut_decays F");
+		if(dynamical_scale_choice3) madgraph2.readString(" set dynamical_scale_choice 3");
 		madgraph2.readString(" set MT 172.5");
 		madgraph2.readString(" set MP 500");
 		madgraph2.readString(" set WH1 30.931584");
@@ -275,6 +344,34 @@ int main(int argc, char* argv[])
 		run(pythia, SMIA, nEvents);
 		delete pythia;
 	}
+	else if(name=="SMIA_8TeV")
+	{
+		// Produce leading-order gg->tt SM+A events with MadGraph 5.
+		pythia = new Pythia();
+		system("rm -rf madgraphrun_SMIA_8TeV");
+		LHAupMadgraph madgraph_SMIA_8TeV(pythia, true, "madgraphrun_SMIA_8TeV", exe);
+		// madgraph2.setEvents(nEvents);
+		madgraph_SMIA_8TeV.readString("import model Higgs_Effective_Couplings_FormFact");
+		madgraph_SMIA_8TeV.readString("generate g g > t t~ / h HIW=1 HIG=1 QED=99 QCD=99");
+		// Note the need for a blank character before "set".
+		// [0] tanb=0.400000 sba=1.000000 cba=0.000000 wA=143.907354 wH=80.405335 YMT=431.250000 YMB=1.880000 YMC=3.550000 YMM=0.042264 YMTAU=0.710800
+        madgraph_SMIA_8TeV.readString(" set cut_decays F");
+		if(dynamical_scale_choice3) madgraph_SMIA_8TeV.readString(" set dynamical_scale_choice 3");
+		madgraph_SMIA_8TeV.readString(" set MT 172.5");
+		madgraph_SMIA_8TeV.readString(" set MP 500");
+		madgraph_SMIA_8TeV.readString(" set WH1 143.907354");
+		madgraph_SMIA_8TeV.readString(" set YMT 431.25");
+		madgraph_SMIA_8TeV.readString(" set YMB 1.88");
+		madgraph_SMIA_8TeV.readString(" set YMC 3.55");
+		madgraph_SMIA_8TeV.readString(" set YMTAU 0.7108");
+		madgraph_SMIA_8TeV.readString(" set YMM 0.042264");
+		madgraph_SMIA_8TeV.readString(" set nevents "+sEvents);
+		madgraph_SMIA_8TeV.readString(" set ebeam1 4000");
+		madgraph_SMIA_8TeV.readString(" set ebeam2 4000");
+		pythia->setLHAupPtr(&madgraph_SMIA_8TeV);
+		run(pythia, SMIA_8TeV, nEvents);
+		delete pythia;
+	}
 	else if(name=="A")
 	{
 		// Produce leading-order gg->tt A events with MadGraph 5.
@@ -287,6 +384,7 @@ int main(int argc, char* argv[])
 		// [59] tanb=0.860000 sba=1.000000 cba=0.000000 wA=30.931584 wH=17.434106 YMT=200.581395 YMB=4.042000 YMC=1.651163 YMM=0.090868 YMTAU=1.528220
 		// Note the need for a blank character before "set".
 		madgraph3.readString(" set cut_decays F");
+		if(dynamical_scale_choice3) madgraph3.readString(" set dynamical_scale_choice 3");
 		madgraph3.readString(" set MT 172.5");
 		madgraph3.readString(" set MP 500");
 		madgraph3.readString(" set WH1 30.931584");
@@ -314,6 +412,7 @@ int main(int argc, char* argv[])
 		madgraph4.readString("generate g g > h > t t~ QED=99 QCD=99");
 		// Note the need for a blank character before "set".
 		madgraph4.readString(" set cut_decays F");
+		if(dynamical_scale_choice3) madgraph4.readString(" set dynamical_scale_choice 3");
 		madgraph4.readString(" set MT 172.5");
 		madgraph4.readString(" set MH 500");
 		madgraph4.readString(" set WH 49.63");
@@ -339,6 +438,7 @@ int main(int argc, char* argv[])
 		// Note the need for a blank character before "set".
 		// [20] tanb=0.660000 sba=1.000000 cba=0.000000 wA=52.510675 wH=29.593605 YMT=-261.363636 YMB=3.102000 YMC=-2.151515 YMM=0.069736 YMTAU=1.172820
         madgraph_valid.readString(" set cut_decays F");
+        if(dynamical_scale_choice3) madgraph_valid.readString(" set dynamical_scale_choice 3");
 		madgraph_valid.readString(" set MT 172.5");
 		madgraph_valid.readString(" set MP 500.");
 		madgraph_valid.readString(" set MH 500.");
@@ -373,6 +473,7 @@ int main(int argc, char* argv[])
 		// Note the need for a blank character before "set".
 		// [20] tanb=0.660000 sba=1.000000 cba=0.000000 wA=52.510675 wH=29.593605 YMT=-261.363636 YMB=3.102000 YMC=-2.151515 YMM=0.069736 YMTAU=1.172820
         madgraph_SMIHjj.readString(" set cut_decays F");
+        if(dynamical_scale_choice3) madgraph_SMIHjj.readString(" set dynamical_scale_choice 3");
 		madgraph_SMIHjj.readString(" set MT 172.5");
 		madgraph_SMIHjj.readString(" set MP 500.");
 		madgraph_SMIHjj.readString(" set MH 500.");

@@ -1,11 +1,14 @@
 #!/usr/bin/python
 
 import ROOT
-from ROOT import std, gROOT, gStyle, gPad, TCanvas, TH1, TH1D, TH2D, TLegend, TLine, TFile, TTree, TLorentzVector, TMath, TVirtualPad, TEventList
+from ROOT import *
 import kinematics
 import THDM
 import sys
 import os
+sys.path.append('/Users/hod/GitHub/2HDM')
+sys.path.append('/Users/hod/MC/LHAPDF/install-karl/lib/python2.7/site-packages/')
+import lhapdf
 
 
 ##################

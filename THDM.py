@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import ROOT
-from ROOT import gROOT, gDirectory, TFile, TTree, TMath, TEventList, TEntryList, TDirectory, TCut
+from ROOT import *
 import numpy as NUMPY
 from enum import Enum
 import subprocess # just to call an arbitrary command e.g. 'ls'
@@ -17,7 +17,7 @@ import lhapdf
 
 class t2HDM:
    """The 2HDM definitions"""
-   def __init__(self, nameX="H", mX=750, type=2, sba=1, mintanb=0.3, maxtanb=3):
+   def __init__(self, nameX="A", mX=500, type=2, sba=1, mintanb=0.4, maxtanb=0.4):
       self.nameX   = nameX
       self.mX      = mX
       self.type    = type
@@ -116,7 +116,6 @@ def couplings(type,nameX,fermion,tanb,sba,cba):
    return g
 
 def setParameters(nameX,mX,cuts="",type=2,sba=1):
-   # f = TFile("/Users/hod/GitHub/2HDM/thdm_grid_v163_13TeV.root","READ")
    f = TFile("/Users/hod/GitHub/2HDM/thdm_grid_v166.root","READ")
    t = f.Get("thdm")
    b_tb  = NUMPY.zeros(1, dtype=float)
@@ -169,7 +168,9 @@ def compileSM(mgpath,nameX,mX,sba):
    X       = "matrix/"+nameX+"/"+str(mX)+"/"+str(sba)+"/"
    command = "./bin/mg5_aMC noam/proc_card_mg5_SM_partonlevel.minimal.dat"
    procdirbase = "ggtt-SM-partonlevel/SubProcesses/"
-   procdirs = [procdirbase+"P0_gg_ttx/", procdirbase+"P1_gg_ttxg/", procdirbase+"P2_gg_ttxgg/", procdirbase+"P2_gg_ttxuux/"]
+   # procdirs = [procdirbase+"P0_gg_ttx/", procdirbase+"P1_gg_ttxg/", procdirbase+"P2_gg_ttxgg/", procdirbase+"P2_gg_ttxuux/"]
+   procdirs = [procdirbase+"P1_gg_ttx/"]
+   # procdirs = [procdirbase+"P1_gg_ttx_no_hh1/"]
    matxdir = os.getcwd()+"/"+X
    libdir  = matxdir+"SM/"
 
@@ -180,9 +181,9 @@ def compileSM(mgpath,nameX,mX,sba):
    p = subprocess.Popen("mkdir -p "+libdir, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    out, err = p.communicate()
    p = subprocess.Popen("mkdir -p "+libdir+"/ttx",    shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   p = subprocess.Popen("mkdir -p "+libdir+"/ttxg",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   p = subprocess.Popen("mkdir -p "+libdir+"/ttxgg",  shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   p = subprocess.Popen("mkdir -p "+libdir+"/ttxuux", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   # p = subprocess.Popen("mkdir -p "+libdir+"/ttxg",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   # p = subprocess.Popen("mkdir -p "+libdir+"/ttxgg",  shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   # p = subprocess.Popen("mkdir -p "+libdir+"/ttxuux", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
    # enter the directory like this:
    with cd(mgpath):
@@ -202,9 +203,11 @@ def compileSM(mgpath,nameX,mX,sba):
          # go to make the library
          with cd(procdir):
             procname = procdir
-            procname = procname.replace(procdirbase+"P0_gg_","")
+            # procname = procname.replace("_no_hh1","")
             procname = procname.replace(procdirbase+"P1_gg_","")
-            procname = procname.replace(procdirbase+"P2_gg_","")
+            # procname = procname.replace(procdirbase+"P0_gg_","")
+            # procname = procname.replace(procdirbase+"P1_gg_","")
+            # procname = procname.replace(procdirbase+"P2_gg_","")
             procname = procname.replace("/","")
             if(notMade):
                p = subprocess.Popen("make", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -231,20 +234,16 @@ def compileX(index,mgpath,nameX,mX,sba):
    S = ""
    if(nameX=="A"): S = "h"
    if(nameX=="H"): S = "h1"
-   procdirs = [procdirbase+"P0_gg_ttx_no_"+S+"/",
-               procdirbase+"P1_gg_ttxg_no_"+S+"/",
-               procdirbase+"P2_gg_ttxgg_no_"+S+"/",
-               procdirbase+"P2_gg_ttxuux_no_"+S+"/", 
-               procdirbase+"P2_gg_ttxddx_no_"+S+"/",
-               procdirbase+"P2_gg_ttxssx_no_"+S+"/",
-               procdirbase+"P2_gg_ttxccx_no_"+S+"/",
-               procdirbase+"P2_gg_ttxbbx_no_"+S+"/"]
-               # procdirbase+"P2_gg_ttxdbx_no_"+S+"/",
-               # procdirbase+"P2_gg_ttxdsx_no_"+S+"/",
-               # procdirbase+"P2_gg_ttxdxb_no_"+S+"/",
-               # procdirbase+"P2_gg_ttxsbx_no_"+S+"/",
-               # procdirbase+"P2_gg_ttxsdx_no_"+S+"/",
-               # procdirbase+"P2_gg_ttxsxb_no_"+S+"/",
+   procdirs = [procdirbase+"P1_gg_ttx_no_"+S+"/"]
+
+   # procdirs = [procdirbase+"P0_gg_ttx_no_"+S+"/",
+   #             procdirbase+"P1_gg_ttxg_no_"+S+"/",
+   #             procdirbase+"P2_gg_ttxgg_no_"+S+"/",
+   #             procdirbase+"P2_gg_ttxuux_no_"+S+"/", 
+   #             procdirbase+"P2_gg_ttxddx_no_"+S+"/",
+   #             procdirbase+"P2_gg_ttxssx_no_"+S+"/",
+   #             procdirbase+"P2_gg_ttxccx_no_"+S+"/",
+   #             procdirbase+"P2_gg_ttxbbx_no_"+S+"/"]
    thisdir = os.getcwd()+"/"
    matxdir = thisdir+X
    libdir  = matxdir+str(index)+"/"
@@ -258,19 +257,13 @@ def compileX(index,mgpath,nameX,mX,sba):
    p = subprocess.Popen("mkdir -p "+libdir, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    out, err = p.communicate()
    p = subprocess.Popen("mkdir -p "+libdir+"/ttx",      shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   p = subprocess.Popen("mkdir -p "+libdir+"/ttxg",     shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   p = subprocess.Popen("mkdir -p "+libdir+"/ttxgg",    shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   p = subprocess.Popen("mkdir -p "+libdir+"/ttxuux",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   p = subprocess.Popen("mkdir -p "+libdir+"/ttxddx",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   p = subprocess.Popen("mkdir -p "+libdir+"/ttxssx",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   p = subprocess.Popen("mkdir -p "+libdir+"/ttxccx",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   p = subprocess.Popen("mkdir -p "+libdir+"/ttxbbx",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   # p = subprocess.Popen("mkdir -p "+libdir+"/ttxdbx",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   # p = subprocess.Popen("mkdir -p "+libdir+"/ttxdsx",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   # p = subprocess.Popen("mkdir -p "+libdir+"/ttxdxb",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   # p = subprocess.Popen("mkdir -p "+libdir+"/ttxsbx",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   # p = subprocess.Popen("mkdir -p "+libdir+"/ttxsdx",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   # p = subprocess.Popen("mkdir -p "+libdir+"/ttxsxb",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   # p = subprocess.Popen("mkdir -p "+libdir+"/ttxg",     shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   # p = subprocess.Popen("mkdir -p "+libdir+"/ttxgg",    shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   # p = subprocess.Popen("mkdir -p "+libdir+"/ttxuux",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   # p = subprocess.Popen("mkdir -p "+libdir+"/ttxddx",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   # p = subprocess.Popen("mkdir -p "+libdir+"/ttxssx",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   # p = subprocess.Popen("mkdir -p "+libdir+"/ttxccx",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+   # p = subprocess.Popen("mkdir -p "+libdir+"/ttxbbx",   shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
    # enter the directory like this:
    with cd(mgpath):
@@ -312,9 +305,10 @@ def compileX(index,mgpath,nameX,mX,sba):
          # go to make the library
          with cd(procdir):
             procname = procdir
-            procname = procname.replace(procdirbase+"P0_gg_","")
             procname = procname.replace(procdirbase+"P1_gg_","")
-            procname = procname.replace(procdirbase+"P2_gg_","")
+            # procname = procname.replace(procdirbase+"P0_gg_","")
+            # procname = procname.replace(procdirbase+"P1_gg_","")
+            # procname = procname.replace(procdirbase+"P2_gg_","")
             procname = procname.replace("_no_"+S+"/","")
             if(notMade):
                p = subprocess.Popen("make", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -336,9 +330,11 @@ def compileX(index,mgpath,nameX,mX,sba):
 
 modules = {}
 def setModules(libmatrix,nameX,nX,libs="All",index=-1):
-   procsSM = ["ttx", "ttxg", "ttxgg", "ttxuux"]
+   procsSM = ["ttx"]
+   # procsSM = ["ttx", "ttxg", "ttxgg", "ttxuux"]
    # procsX = ["ttx", "ttxg", "ttxbbx", "ttxccx", "ttxdbx", "ttxddx", "ttxdsx", "ttxdxb", "ttxgg", "ttxsbx", "ttxsdx", "ttxssx", "ttxsxb", "ttxuux"]
-   procsX = ["ttx", "ttxg", "ttxgg", "ttxuux", "ttxddx", "ttxssx", "ttxccx", "ttxbbx"]
+   # procsX = ["ttx", "ttxg", "ttxgg", "ttxuux", "ttxddx", "ttxssx", "ttxccx", "ttxbbx"]
+   procsX = ["ttx"]
    if(libs=="All" or libs=="AllX"):
       for i in range (0,nX):
          for proc in procsX:
@@ -379,9 +375,11 @@ def testImport(nameX,mX,sba,index=-1):
    alphaS = 0.13
    nhel = 0 # means sum over all helicity
    ## the ME^2 and the weight
-   procsSM = ["ttx", "ttxg", "ttxgg", "ttxuux"]
+   procsSM = ["ttx"]
+   # procsSM = ["ttx", "ttxg", "ttxgg", "ttxuux"]
    # procsX = ["ttx", "ttxg", "ttxbbx", "ttxccx", "ttxdbx", "ttxddx", "ttxdsx", "ttxdxb", "ttxgg", "ttxsbx", "ttxsdx", "ttxssx", "ttxsxb", "ttxuux"]
-   procsX = ["ttx", "ttxg", "ttxgg", "ttxuux", "ttxddx", "ttxssx", "ttxccx", "ttxbbx"]
+   # procsX = ["ttx", "ttxg", "ttxgg", "ttxuux", "ttxddx", "ttxssx", "ttxccx", "ttxbbx"]
+   procsX = ["ttx"]
 
    me2 = -1
    me2 = {}

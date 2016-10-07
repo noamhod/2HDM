@@ -1,17 +1,22 @@
 #!/usr/bin/python
 
 import ROOT
-from ROOT import std, gROOT, gStyle, gPad, TCanvas, TH1, TH1D, TH2D, TLegend, TLine, TFile, TTree, TLorentzVector, TMath, TVirtualPad, TEventList
+from ROOT import *
 import kinematics
 import THDM
 import sys
 import os
+import math
 from array import *
-# import subprocess # just to call an arbitrary command e.g. 'ls'
-# from contextlib import contextmanager
-# from pipes import quote
-# from pprint import pprint
-# import imp
+
+def normalizeToBinWidth(h, unit=0): ## normalize to nEvts/40 GeV
+   for b in xrange(h.GetNbinsX()+1):
+      sf = unit/h.GetBinWidth(b) if(unit>0) else 1./h.GetBinWidth(b)
+      h.SetBinContent(b, h.GetBinContent(b)*sf)
+      h.SetBinError(b,   h.GetBinError(b)*sf)
+   return h
+
+
 
 def setStyle():
    gROOT.Reset()
@@ -56,8 +61,9 @@ def setStyle():
    gStyle.SetOptFit(0);
    gStyle.SetPadTickX(1);
    gStyle.SetPadTickY(1);
+   ROOT.TGaxis.SetMaxDigits(4)
 
-def plot(h1, h2, h3, tanb, wX, fname, ymin=-1, ymax=-1):
+def plot(h1, h2, h3, h4, tanb, wX, nkevents, cme, fname, ymin=-1, ymax=-1):
    cnv = TCanvas("cnv","",600,600);
    cnv.Divide(1,3);
    tvp_hists = cnv.cd(1);
@@ -84,49 +90,44 @@ def plot(h1, h2, h3, tanb, wX, fname, ymin=-1, ymax=-1):
    th1n_tmp.SetBinErrorOption(TH1.kPoisson);
    th1d_tmp.SetBinErrorOption(TH1.kPoisson);
 	
-   hs = h2.Clone("subtr");
-   hs.SetTitle(";"+sXtitle+";|SM+#it{"+nameX+"}|^{2}/|SM|^{2}-1 [%]");
-   hs.Add(h1,-1.)
-   hs.Divide(h1)
-   hs.Scale(100)
+   # hs = h2.Clone("subtr");
+   # hs.SetTitle(";"+sXtitle+";|SM+#it{"+nameX+"}|^{2}/|SM|^{2}-1 [%]");
+   # hs.Add(h1,-1.)
+   # hs.Divide(h1)
+   # hs.Scale(100)
 
-   rmin=-11;
-   rmax=+11;
-   hs.SetMarkerStyle(20);
-   hs.SetMarkerSize(0.8);
-   hs.SetMarkerColor(ROOT.kBlack);
-   hs.SetLineColor(ROOT.kBlack);
-   hs.SetLineStyle(1);
-   hs.SetLineWidth(2);
-   xLabelSize = hs.GetXaxis().GetLabelSize()*1.85;
-   yLabelSize = hs.GetYaxis().GetLabelSize()*1.85;
-   xTitleSize = hs.GetXaxis().GetTitleSize()*1.85;
-   yTitleSize = hs.GetYaxis().GetTitleSize()*1.85;
-   titleSize  = hs.GetTitleSize()           *1.85;
-   hs.GetXaxis().SetLabelSize(xLabelSize);
-   hs.GetYaxis().SetLabelSize(yLabelSize);
-   hs.GetXaxis().SetTitleSize(xTitleSize);
-   hs.GetYaxis().SetTitleSize(yTitleSize);
-   hs.SetTitleSize(titleSize);
-   hs.GetYaxis().SetTitleOffset(0.55);
-   hs.GetXaxis().SetTitleOffset(0.83);
-   hs.SetMinimum(rmin);
-   hs.SetMaximum(rmax);
-   lineS = TLine(hs.GetXaxis().GetXmin(),0.,hs.GetXaxis().GetXmax(),0.);
+   rmin=-13;
+   rmax=+13;
+   h4.Divide(h1)
+   h4.Scale(100)
+   h4.SetTitle(";"+sXtitle+";(SM+#it{"+nameX+"})/SM-1 [%]");
+   xLabelSize = h4.GetXaxis().GetLabelSize()*1.85;
+   yLabelSize = h4.GetYaxis().GetLabelSize()*1.85;
+   xTitleSize = h4.GetXaxis().GetTitleSize()*1.85;
+   yTitleSize = h4.GetYaxis().GetTitleSize()*1.85;
+   titleSize  = h4.GetTitleSize()           *1.85;
+   h4.GetXaxis().SetLabelSize(xLabelSize);
+   h4.GetYaxis().SetLabelSize(yLabelSize);
+   h4.GetXaxis().SetTitleSize(xTitleSize);
+   h4.GetYaxis().SetTitleSize(yTitleSize);
+   h4.SetTitleSize(titleSize);
+   h4.GetYaxis().SetTitleOffset(0.55);
+   h4.GetXaxis().SetTitleOffset(0.83);
+   h4.SetMinimum(rmin);
+   h4.SetMaximum(rmax);
+   lineS = TLine(h4.GetXaxis().GetXmin(),0.,h4.GetXaxis().GetXmax(),0.);
 
+   rmin=+0.83;
+   rmax=+1.17;
    hr = th1d_tmp.Clone("ratio")
-   hr.Sumw2()
-   hr.SetTitle(";"+sXtitle+";|SM+#it{"+nameX+"}|^{2}_{rwt}/|SM+#it{"+nameX+"}|^{2}_{gen}")
+   hr.SetTitle(";"+sXtitle+";(SM+#it{"+nameX+"})_{rwt}/(SM+#it{"+nameX+"})_{gen}")
    hr.Divide(h3)
-
-   rmin=+0.80;
-   rmax=+1.20;
-   hr.SetMarkerStyle(20);
-   hr.SetMarkerSize(0.8);
-   hr.SetMarkerColor(ROOT.kBlack);
-   hr.SetLineColor(ROOT.kBlack);
-   hr.SetLineStyle(1);
-   hr.SetLineWidth(2);
+   hr.SetMarkerStyle(h3.GetMarkerStyle());
+   hr.SetMarkerSize(h3.GetMarkerSize());
+   hr.SetMarkerColor(h3.GetMarkerColor());
+   hr.SetLineColor(h3.GetLineColor());
+   hr.SetLineStyle(h3.GetLineStyle());
+   hr.SetLineWidth(h3.GetLineWidth());
    xLabelSize = hr.GetXaxis().GetLabelSize()*1.85;
    yLabelSize = hr.GetYaxis().GetLabelSize()*1.85;
    xTitleSize = hr.GetXaxis().GetTitleSize()*1.85;
@@ -147,28 +148,29 @@ def plot(h1, h2, h3, tanb, wX, fname, ymin=-1, ymax=-1):
    tvp_subtr.SetTopMargin(0);
    tvp_subtr.SetBottomMargin(0);
    tvp_ratio.SetTopMargin(0);
-   tvp_ratio.SetBottomMargin(0.20);
+   tvp_ratio.SetBottomMargin(0.0);
    
-   leg = TLegend(0.5,0.4,0.87,0.9,"","brNDC");
+   leg = TLegend(0.5,0.4,0.87,0.9,"","brNDC")
    leg.SetFillStyle(4000); # will be transparent
-   leg.SetFillColor(0);
-   leg.SetTextFont(42);
-   leg.SetBorderSize(0);
-   leg.AddEntry(0, "MadGraph+Pythia8", "");
-   leg.AddEntry(0, "#it{gg}#rightarrow#it{t}#bar{#it{t}} (500k events)", "");
-   leg.AddEntry(0, "Truth level for now", "");
-   leg.AddEntry(h1,"|SM|^{2}","ple");
-   leg.AddEntry(h2,"|SM+#it{"+nameX+"}|^{2} reweighted","ple");
-   leg.AddEntry(h3,"|SM+#it{"+nameX+"}|^{2} generated","ple");
-   leg.AddEntry(0, "#it{m}_{#it{"+nameX+"}}="+str(mX)+" GeV", "");
-   leg.AddEntry(0, "#Gamma_{#it{"+nameX+"}}/#it{m}_{#it{"+nameX+"}}="+str(wX)+" [%]", "");
-   leg.AddEntry(0, "sin(#beta-#alpha)=1", "");
-   leg.AddEntry(0, "tan#beta="+str(tanb), "");
+   leg.SetFillColor(0)
+   leg.SetTextFont(42)
+   leg.SetBorderSize(0)
+   leg.AddEntry(0, "MadGraph+Pythia8", "")
+   leg.AddEntry(0, "#it{gg}#rightarrow#it{t}#bar{#it{t}} ("+str(nkevents)+"k events)", "")
+   leg.AddEntry(0, cme, "")
+   leg.AddEntry(h1,"SM","ple")
+   leg.AddEntry(h2,"SM+#it{"+nameX+"} reweighted","ple")
+   leg.AddEntry(h3,"SM+#it{"+nameX+"} generated","ple")
+   leg.AddEntry(0, "sin(#beta-#alpha)=1", "")
+   leg.AddEntry(0, "tan#beta="+str(tanb), "")
+   leg.AddEntry(0, "#it{m}_{#it{"+nameX+"}}="+str(mX)+" GeV", "")
+   leg.AddEntry(0, "#Gamma_{#it{"+nameX+"}}/#it{m}_{#it{"+nameX+"}}="+str(wX)+" [%]", "")
    
-   tvp_hists.cd();
+   tvp_hists.cd()
    # tvp_hists.SetLogy()
-   if(ymin>-1): h3.SetMinimum(ymin);
-   if(ymax>-1): h3.SetMaximum(ymax);
+   if(ymin>-1): h2.SetMinimum(ymin)
+   else:        h2.SetMinimum(1)
+   if(ymax>-1): h2.SetMaximum(ymax)
    h2.Draw();
    h1.Draw("same");
    h3.Draw("same");
@@ -178,8 +180,9 @@ def plot(h1, h2, h3, tanb, wX, fname, ymin=-1, ymax=-1):
    
    tvp_subtr.cd();
    tvp_subtr.SetGridy();
-   hs.Draw("e1p");
+   h4.Draw("e1p");
    lineS.Draw("same");
+   h4.Draw("e1p same");
    tvp_subtr.Update();
    tvp_subtr.RedrawAxis();
 
@@ -187,6 +190,7 @@ def plot(h1, h2, h3, tanb, wX, fname, ymin=-1, ymax=-1):
    tvp_ratio.SetGridy();
    hr.Draw("e1p");
    lineR.Draw("same");
+   hr.Draw("same");
    tvp_ratio.Update();
    tvp_ratio.RedrawAxis();
    
@@ -194,39 +198,11 @@ def plot(h1, h2, h3, tanb, wX, fname, ymin=-1, ymax=-1):
    cnv.SaveAs(fname);
 
 
-# def getME2(libpath,g1,g2,t1,t2,printerr=False,printout=False):
-#    sg1 = "-g1e "+str(g1.E())+" -g1px "+str(g1.Px())+" -g1py "+str(g1.Py())+" -g1pz "+str(g1.Pz())
-#    sg2 = "-g2e "+str(g2.E())+" -g2px "+str(g2.Px())+" -g2py "+str(g2.Py())+" -g2pz "+str(g2.Pz())
-#    st1 = "-t1e "+str(t1.E())+" -t1px "+str(t1.Px())+" -t1py "+str(t1.Py())+" -t1pz "+str(t1.Pz())
-#    st2 = "-t2e "+str(t2.E())+" -t2px "+str(t2.Px())+" -t2py "+str(t2.Py())+" -t2pz "+str(t2.Pz())
-#    momenta = sg1+" "+sg2+" "+st1+" "+st2
-#    args    = "-path "+libpath+" "+momenta
-#    me2 = -1
-#    proc = subprocess.Popen("python matrix.py "+args, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-#    out, err = proc.communicate()
-#    if(printerr): print "err=",err
-#    if(printout): print "out=",out
-#    me2 = float(out) 
-#    return me2
-
 ##################
 ### Begin code ###
 ##################
 
 setStyle()
-
-
-### make the libraries
-# type=2
-# sba=1
-# mX=500
-# nameX="H"
-# cuts = "m"+nameX+"=="+str(mX)+" && sba==1 && TMath::ATan(tanb)>0. && TMath::ATan(tanb)<TMath::Pi()/2. && TMath::Abs(cba)<=1. && type=="+str(type)+" && (status&3)==0"
-# mgpath = "/Users/hod/MC/MadGraph/MG5_aMC_v2_3_3_tests/"
-# alphaS = 0.13
-# nhel   = 0 # means sum over all helicity
-# libmatrix = "matrix/"+nameX+"/"+str(mX)+"/"
-# THDM.setParameters(nameX,mX,cuts,type,sba)
 
 type   = THDM.model.type
 sba    = THDM.model.sba
@@ -236,55 +212,80 @@ cuts   = THDM.model.cuts
 mgpath = THDM.model.mgpath
 alphaS = THDM.model.alphaS
 nhel   = THDM.model.nhel
-libmatrix = "matrix/"+nameX+"/"+str(mX)+"/"
+libmatrix = "/Users/hod/GitHub/2HDM/matrix/"+nameX+"/"+str(mX)+"/"+str(sba)+"/"
 THDM.setParameters(nameX,mX,cuts,type,sba)
 ###############
-# [20] tanb=0.660000 sba=1.000000 cba=0.000000 wA=52.510675 wH=29.593605 YMT=261.363636 YMB=3.102000 YMC=2.151515 YMM=0.069736 YMTAU=1.172820
-index=20 ######
-THDM.setModules(os.getcwd(),libmatrix,nameX,len(THDM.parameters),"SM")
-THDM.setModules(os.getcwd(),libmatrix,nameX,len(THDM.parameters),"X",index)
+index=0 
+THDM.setModules(libmatrix,nameX,len(THDM.parameters),"All")
+print THDM.modules
 ###############
 
 
+listbins = [0,80,160,240,320,360,400,440,500,560,600,640,680,720,760,800,860,920,1040,1160,1280]
+arrbins = array("d", listbins)
+nbins = len(listbins)-1
+
 ### mass histos
-hmSM     = TH1D("hmSM",     ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events",25,350,850)
-hmSMXrwt = TH1D("hmSMXrwt", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events",25,350,850)
-hmSMXgen = TH1D("hmSMXgen", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events",25,350,850)
+hmSMgen = TH1D("hmSMgen", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
+hmXXrwt = TH1D("hmXXrwt", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
+hmXIrwt = TH1D("hmXIrwt", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
+hmXXgen = TH1D("hmXXgen", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
+hmXIabs = TH1D("hmXIabs", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 10 GeV",70,300,1000)
+hmXIabsStd = TH1D("hmXIabsStd", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
 
-hmSM.Sumw2()
-hmSM.SetLineWidth(2)
-hmSM.SetLineColor(ROOT.kBlack)
-hmSM.SetMarkerColor(ROOT.kBlack)
-hmSM.SetMarkerStyle(24)
+hmSMgen.Sumw2()
+hmSMgen.SetLineWidth(2)
+hmSMgen.SetLineColor(ROOT.kBlack)
+hmSMgen.SetMarkerColor(ROOT.kBlack)
+hmSMgen.SetMarkerStyle(24)
 
-hmSMXrwt.Sumw2()
-hmSMXrwt.SetLineWidth(2)
-hmSMXrwt.SetLineColor(ROOT.kRed)
-hmSMXrwt.SetMarkerColor(ROOT.kRed)
-hmSMXrwt.SetMarkerStyle(20)
+hmXXrwt.Sumw2()
+hmXXrwt.SetLineWidth(2)
+hmXXrwt.SetLineColor(ROOT.kRed)
+hmXXrwt.SetMarkerColor(ROOT.kRed)
+hmXXrwt.SetMarkerStyle(20)
 
-hmSMXgen.Sumw2()
-hmSMXgen.SetLineWidth(2)
-hmSMXgen.SetLineColor(ROOT.kAzure+9)
-hmSMXgen.SetMarkerColor(ROOT.kAzure+9)
-hmSMXgen.SetMarkerStyle(24)
+hmXIrwt.Sumw2()
+hmXIrwt.SetLineWidth(2)
+hmXIrwt.SetLineColor(ROOT.kRed)
+hmXIrwt.SetMarkerColor(ROOT.kRed)
+hmXIrwt.SetMarkerStyle(20)
+
+hmXXgen.Sumw2()
+hmXXgen.SetLineWidth(2)
+hmXXgen.SetLineColor(ROOT.kAzure+9)
+hmXXgen.SetMarkerColor(ROOT.kAzure+9)
+hmXXgen.SetMarkerStyle(24)
+
+hmXIabs.Sumw2()
+hmXIabs.SetLineWidth(2)
+hmXIabs.SetLineColor(ROOT.kRed)
+
+hmXIabsStd.Sumw2()
+hmXIabsStd.SetLineWidth(2)
+hmXIabsStd.SetLineColor(ROOT.kRed)
 
 
-fSM = TFile("tops.SM.500k.root","READ")
-tSM = fSM.Get("SM")
+
+
+fSM = TFile("/Users/hod/MC/Pythia/pythia8215/examples/tops.SM_nobmass_8TeV.root","READ")
+tSM = fSM.Get("SM_nobmass_8TeV")
+# fSM = TFile("/Users/hod/MC/Pythia/pythia8215/examples/tops.SM_8TeV.root","READ")
+# tSM = fSM.Get("SM_8TeV")
 pSM = ROOT.vector(TLorentzVector)()
 iSM = std.vector(int)()
 tSM.SetBranchAddress("p4",pSM);
 tSM.SetBranchAddress("id",iSM);
 
-fXX = TFile("tops.SMIH_valid.500k.root","READ")
-# fXX = TFile("tops.SMIH_valid.50k.root","READ")
-tXX = fXX.Get("SMIH_valid")
+fXX = TFile("/Users/hod/MC/Pythia/pythia8215/examples/tops.SMIA_8TeV.root","READ")
+tXX = fXX.Get("SMIA_8TeV")
 pXX = ROOT.vector(TLorentzVector)()
 iXX = std.vector(int)()
 tXX.SetBranchAddress("p4",pXX);
 tXX.SetBranchAddress("id",iXX);
 
+nkevents = tXX.GetEntries()/1000
+cme = "#sqrt{#it{s}} = 8 TeV" if("8TeV" in fSM.GetName()) else "#sqrt{#it{s}} = 13 TeV"
 
 n=1
 for event in tSM:
@@ -300,13 +301,22 @@ for event in tSM:
         [ t1.E(), t1.Px(), t1.Py(), t1.Pz() ],
         [ t2.E(), t2.Px(), t2.Py(), t2.Pz() ]]
    P=THDM.invert_momenta(p)
+
+   # Q = 0.5*(math.sqrt(t1.M()*t1.M()+t1.Pt()*t1.Pt())+math.sqrt(t2.M()*t2.M()+t2.Pt()*t2.Pt()))
+   alphaS = event.aS #THDM.model.AlphaS.alphasQ(Q)
+
    ## the ME^2 and the weight
-   me2SM = THDM.modules['matrix2SMpy'].get_me(P,alphaS,nhel)                   ### calculate the SM ME^2
-   me2XX = THDM.modules['matrix2'+nameX+str(index)+'py'].get_me(P,alphaS,nhel) ### calculate the X ME^2
+   # me2SM = THDM.modules['matrix2SMpy'].get_me(P,alphaS,nhel)                   ### calculate the SM ME^2
+   # me2XX = THDM.modules['matrix2'+nameX+str(index)+'py'].get_me(P,alphaS,nhel) ### calculate the X ME^2
+   me2SM = THDM.modules['matrix2SMttxpy'].get_me(P,alphaS,nhel)                   ### calculate the SM ME^2
+   me2XX = THDM.modules['matrix2'+nameX+str(index)+'ttxpy'].get_me(P,alphaS,nhel) ### calculate the X ME^2
    weightX = me2XX/me2SM                                                       ### calculate the weight
 
-   hmSM.Fill(mtt)
-   hmSMXrwt.Fill(mtt,weightX)
+   hmSMgen.Fill(mtt)
+   hmXXrwt.Fill(mtt,weightX)
+   hmXIrwt.Fill(mtt,weightX-1)
+   hmXIabs.Fill(mtt,weightX-1)
+   hmXIabsStd.Fill(mtt,weightX-1)
 
    n+=1
 
@@ -318,11 +328,70 @@ for event in tXX:
    t1=event.p4[2]
    t2=event.p4[3]
    mtt = (t1+t2).M()
-   hmSMXgen.Fill(mtt)
+   hmXXgen.Fill(mtt)
    n+=1
+
+hmSMgen = normalizeToBinWidth(hmSMgen,40)
+hmXXgen = normalizeToBinWidth(hmXXgen,40)
+hmXXrwt = normalizeToBinWidth(hmXXrwt,40)
+hmXIrwt = normalizeToBinWidth(hmXIrwt,40)
+# hmXIabs = normalizeToBinWidth(hmXIabs)
+hmXIabsStd = normalizeToBinWidth(hmXIabsStd,40)
 
 
 tanb = '%.2f' % THDM.parameters[index].get("tanb")
 wXprcnt = '%.1f' % (THDM.parameters[index].get("w"+nameX)/mX*100.)
 stanb = tanb.replace(".","")
-plot(hmSM,hmSMXrwt,hmSMXgen,tanb,wXprcnt,"2HDM.reweighting."+nameX+"."+str(mX)+"GeV.tanb"+stanb+".pdf")
+pdfname = "2HDM.reweighting."+nameX+"."+str(mX)+"GeV.tanb"+stanb+".pdf"
+plot(hmSMgen,hmXXrwt,hmXXgen,hmXIrwt,tanb,wXprcnt,nkevents,cme,pdfname+"(")
+
+
+
+mb2fb = 1.e12
+pb2fb = 1.e3
+sigmaSM = 1.285e-07*mb2fb # 252.89*pb2fb
+neventsSM = tXX.GetEntries()
+lumiSM = neventsSM/sigmaSM
+lumiData = 20.3 ## fb-1
+
+legabs = TLegend(0.5,0.5,0.87,0.9,"","brNDC")
+legabs.SetFillStyle(4000); # will be transparent
+legabs.SetFillColor(0)
+legabs.SetTextFont(42)
+legabs.SetBorderSize(0)
+legabs.AddEntry(0, "MadGraph+Pythia8", "")
+legabs.AddEntry(0, "#it{gg}#rightarrow#it{t}#bar{#it{t}} ("+str(nkevents)+"k events)", "")
+legabs.AddEntry(0, cme+", "+str(lumiData)+" fb^{-1}", "")
+legabs.AddEntry(hmXIabs,"|SM+#it{"+nameX+"}|^{2}-|SM|^{2} reweighted","l")
+legabs.AddEntry(0, "sin(#beta-#alpha)=1", "")
+legabs.AddEntry(0, "tan#beta="+str(tanb), "")
+legabs.AddEntry(0, "#it{m}_{#it{"+nameX+"}}="+str(mX)+" GeV", "")
+legabs.AddEntry(0, "#Gamma_{#it{"+nameX+"}}/#it{m}_{#it{"+nameX+"}}="+str(wXprcnt)+" [%]", "")
+
+
+
+hmXIabs.Scale(lumiData/lumiSM)
+hmXIabs.SetMinimum(hmXIabs.GetMinimum()*1.1)
+hmXIabs.SetMaximum(hmXIabs.GetMaximum()*2.3)
+cnv = TCanvas("cnv","",600,500)
+cnv.Draw()
+cnv.cd()
+cnv.SetGrid(1,1)
+hmXIabs.Draw("hist")
+legabs.Draw("same")
+cnv.RedrawAxis()
+cnv.Update()
+cnv.SaveAs(pdfname)
+
+hmXIabsStd.Scale(lumiData/lumiSM)
+hmXIabsStd.SetMinimum(hmXIabsStd.GetMinimum()*1.1)
+hmXIabsStd.SetMaximum(hmXIabsStd.GetMaximum()*2.3)
+cnv = TCanvas("cnv","",600,500)
+cnv.Draw()
+cnv.cd()
+cnv.SetGrid(1,1)
+hmXIabsStd.Draw("hist")
+legabs.Draw("same")
+cnv.RedrawAxis()
+cnv.Update()
+cnv.SaveAs(pdfname+")")
