@@ -29,7 +29,7 @@ using namespace Pythia8;
 
 enum proc
 {
-	SM,SM_8TeV,MG_SM,SMNLO,SM_nobmass, SM_nobmass_8TeV,SMH,SMIA,SMIA_8TeV,SMIH,SMIHjj,IH,I,H,IA,A,SMIA_valid,SMIH_valid
+	SM,SM_8TeV,MG_SM,SMNLO,SM_nobmass, SM_nobmass_8TeV,SMH,SMIA,SMIA_8TeV,SMIH,SMIHjj,IH,I,H,IA,A,A_8TeV,SMIA_valid,SMIH_valid
 };
 
 //==========================================================================
@@ -71,6 +71,7 @@ void setTree(int name)
 		case H:          initFile("H");          break;
 		case IA:         initFile("IA");         break;
 		case A:          initFile("A");          break;
+		case A_8TeV:     initFile("A_8TeV");     break;
 		case SMIA_valid: initFile("SMIA_valid"); break;
 		case SMIH_valid: initFile("SMIH_valid"); break;
 		default:   cout << "ENUM unkown: " << name << endl;  exit(-1);
@@ -277,10 +278,11 @@ int main(int argc, char* argv[])
 		LHAupMadgraph madgraph_smnobmass(pythia, true, "madgraphrun_smnobmass", exe);
 		// madgraph_smnobmass.setEvents(nEvents);
 		madgraph_smnobmass.readString("import model sm-no_b_mass");
-		madgraph_smnobmass.readString("define j = g u c d s b u~ c~ d~ s~ b~");
-		madgraph_smnobmass.readString("generate g g > t t~ @0");
-		madgraph_smnobmass.readString("add process g g > t t~ j @1");
-		madgraph_smnobmass.readString("add process g g > t t~ j j @2");
+		madgraph_smnobmass.readString("generate g g > t t~");
+		// madgraph_smnobmass.readString("define j = g u c d s b u~ c~ d~ s~ b~");
+		// madgraph_smnobmass.readString("generate g g > t t~ @0");
+		// madgraph_smnobmass.readString("add process g g > t t~ j @1");
+		// madgraph_smnobmass.readString("add process g g > t t~ j j @2");
 		// Note the need for a blank character before "set".
 		madgraph_smnobmass.readString(" set cut_decays F");
 		if(dynamical_scale_choice3) madgraph_smnobmass.readString(" set dynamical_scale_choice 3");
@@ -300,8 +302,8 @@ int main(int argc, char* argv[])
 		LHAupMadgraph madgraph_smnobmass_8TeV(pythia, true, "madgraphrun_smnobmass_8TeV", exe);
 		// madgraph_smnobmass.setEvents(nEvents);
 		madgraph_smnobmass_8TeV.readString("import model sm-no_b_mass");
-		// madgraph_smnobmass_8TeV.readString("define j = g u c d s b u~ c~ d~ s~ b~");
 		madgraph_smnobmass_8TeV.readString("generate g g > t t~");
+		// madgraph_smnobmass_8TeV.readString("define j = g u c d s b u~ c~ d~ s~ b~");
 		// madgraph_smnobmass_8TeV.readString("generate g g > t t~ @0");
 		// madgraph_smnobmass_8TeV.readString("add process g g > t t~ j @1");
 		// madgraph_smnobmass_8TeV.readString("add process g g > t t~ j j @2");
@@ -326,17 +328,16 @@ int main(int argc, char* argv[])
 		madgraph2.readString("import model Higgs_Effective_Couplings_FormFact");
 		madgraph2.readString("generate g g > t t~ / h HIW=1 HIG=1 QED=99 QCD=99");
 		// Note the need for a blank character before "set".
-		// [59] tanb=0.860000 sba=1.000000 cba=0.000000 wA=30.931584 wH=17.434106 YMT=200.581395 YMB=4.042000 YMC=1.651163 YMM=0.090868 YMTAU=1.528220
 		madgraph2.readString(" set cut_decays F");
 		if(dynamical_scale_choice3) madgraph2.readString(" set dynamical_scale_choice 3");
 		madgraph2.readString(" set MT 172.5");
 		madgraph2.readString(" set MP 500");
-		madgraph2.readString(" set WH1 30.931584");
-		madgraph2.readString(" set YMT 200.581395");
-		madgraph2.readString(" set YMB 4.042000");
-		madgraph2.readString(" set YMC 1.651163");
-		madgraph2.readString(" set YMTAU 1.528220");
-		madgraph2.readString(" set YMM 0.090868");
+		madgraph2.readString(" set WH1 143.907354");
+		madgraph2.readString(" set YMT 431.25");
+		madgraph2.readString(" set YMB 1.88");
+		madgraph2.readString(" set YMC 3.55");
+		madgraph2.readString(" set YMTAU 0.7108");
+		madgraph2.readString(" set YMM 0.042264");
 		madgraph2.readString(" set nevents "+sEvents);
 		madgraph2.readString(" set ebeam1 6500");
 		madgraph2.readString(" set ebeam2 6500");
@@ -372,6 +373,35 @@ int main(int argc, char* argv[])
 		run(pythia, SMIA_8TeV, nEvents);
 		delete pythia;
 	}
+	else if(name=="A_8TeV")
+	{
+		// Produce leading-order gg->A->tt events with MadGraph 5.
+		pythia = new Pythia();
+		system("rm -rf madgraphrun_A_8TeV");
+		LHAupMadgraph madgraph_A_8TeV(pythia, true, "madgraphrun_A_8TeV", exe);
+		// madgraph_A_8TeV.setEvents(nEvents);
+		madgraph_A_8TeV.readString("import model Higgs_Effective_Couplings_FormFact");
+		madgraph_A_8TeV.readString("generate g g > h1 > t t~ / h QED=99 QCD=99");
+		// Note the need for a blank character before "set".
+		// [0] tanb=0.400000 sba=1.000000 cba=0.000000 wA=143.907354 wH=80.405335 YMT=431.250000 YMB=1.880000 YMC=3.550000 YMM=0.042264 YMTAU=0.710800
+        madgraph_A_8TeV.readString(" set cut_decays F");
+		if(dynamical_scale_choice3) madgraph_A_8TeV.readString(" set dynamical_scale_choice 3");
+		madgraph_A_8TeV.readString(" set MT 172.5");
+		madgraph_A_8TeV.readString(" set MP 500");
+		madgraph_A_8TeV.readString(" set WH1 143.907354");
+		madgraph_A_8TeV.readString(" set YMT 431.25");
+		madgraph_A_8TeV.readString(" set YMB 1.88");
+		madgraph_A_8TeV.readString(" set YMC 3.55");
+		madgraph_A_8TeV.readString(" set YMTAU 0.7108");
+		madgraph_A_8TeV.readString(" set YMM 0.042264");
+		madgraph_A_8TeV.readString(" set nevents "+sEvents);
+		madgraph_A_8TeV.readString(" set ebeam1 4000");
+		madgraph_A_8TeV.readString(" set ebeam2 4000");
+		pythia->setLHAupPtr(&madgraph_A_8TeV);
+		pythia->particleData.addParticle(9000006,"h1",0,0,0,500.,143.907354);
+		run(pythia, A_8TeV, nEvents);
+		delete pythia;
+	}
 	else if(name=="A")
 	{
 		// Produce leading-order gg->tt A events with MadGraph 5.
@@ -387,17 +417,17 @@ int main(int argc, char* argv[])
 		if(dynamical_scale_choice3) madgraph3.readString(" set dynamical_scale_choice 3");
 		madgraph3.readString(" set MT 172.5");
 		madgraph3.readString(" set MP 500");
-		madgraph3.readString(" set WH1 30.931584");
-		madgraph3.readString(" set YMT 200.581395");
-		madgraph3.readString(" set YMB 4.042000");
-		madgraph3.readString(" set YMC 1.651163");
-		madgraph3.readString(" set YMTAU 1.528220");
-		madgraph3.readString(" set YMM 0.090868");
+		madgraph3.readString(" set WH1 143.907354");
+		madgraph3.readString(" set YMT 431.25");
+		madgraph3.readString(" set YMB 1.88");
+		madgraph3.readString(" set YMC 3.55");
+		madgraph3.readString(" set YMTAU 0.7108");
+		madgraph3.readString(" set YMM 0.042264");
 		madgraph3.readString(" set nevents "+sEvents);
 		madgraph3.readString(" set ebeam1 6500");
 		madgraph3.readString(" set ebeam2 6500");
 		pythia->setLHAupPtr(&madgraph3);
-		pythia->particleData.addParticle(9000006,"h1",0,0,0,500.,49.63);
+		pythia->particleData.addParticle(9000006,"h1",0,0,0,500.,143.907354);
 		run(pythia,A,nEvents);
 		delete pythia;
 	}

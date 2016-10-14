@@ -63,7 +63,7 @@ def setStyle():
    gStyle.SetPadTickY(1);
    ROOT.TGaxis.SetMaxDigits(4)
 
-def plot(h1, h2, h3, h4, tanb, wX, nkevents, cme, fname, ymin=-1, ymax=-1):
+def plot(h1, h2, h3, h4, tanb, wX, nkevents, cme, lumi, fname, ymin=-1, ymax=-1):
    cnv = TCanvas("cnv","",600,600);
    cnv.Divide(1,3);
    tvp_hists = cnv.cd(1);
@@ -76,7 +76,7 @@ def plot(h1, h2, h3, h4, tanb, wX, nkevents, cme, fname, ymin=-1, ymax=-1):
    tvp_hists.SetBottomMargin(0.012);
    tvp_subtr.SetBottomMargin(0.20);
    tvp_subtr.SetTopMargin(0.012);
-   tvp_ratio.SetBottomMargin(0.20);
+   tvp_ratio.SetBottomMargin(0.40);
    tvp_ratio.SetTopMargin(0.012);
    tvp_hists.SetTicks(1,1);
    tvp_subtr.SetTicks(1,1);	
@@ -101,17 +101,17 @@ def plot(h1, h2, h3, h4, tanb, wX, nkevents, cme, fname, ymin=-1, ymax=-1):
    h4.Divide(h1)
    h4.Scale(100)
    h4.SetTitle(";"+sXtitle+";(SM+#it{"+nameX+"})/SM-1 [%]");
-   xLabelSize = h4.GetXaxis().GetLabelSize()*1.85;
-   yLabelSize = h4.GetYaxis().GetLabelSize()*1.85;
-   xTitleSize = h4.GetXaxis().GetTitleSize()*1.85;
-   yTitleSize = h4.GetYaxis().GetTitleSize()*1.85;
-   titleSize  = h4.GetTitleSize()           *1.85;
+   xLabelSize = h4.GetXaxis().GetLabelSize()*2;
+   yLabelSize = h4.GetYaxis().GetLabelSize()*2;
+   xTitleSize = h4.GetXaxis().GetTitleSize()*2;
+   yTitleSize = h4.GetYaxis().GetTitleSize()*2;
+   titleSize  = h4.GetTitleSize()           *2;
    h4.GetXaxis().SetLabelSize(xLabelSize);
    h4.GetYaxis().SetLabelSize(yLabelSize);
    h4.GetXaxis().SetTitleSize(xTitleSize);
    h4.GetYaxis().SetTitleSize(yTitleSize);
    h4.SetTitleSize(titleSize);
-   h4.GetYaxis().SetTitleOffset(0.55);
+   h4.GetYaxis().SetTitleOffset(0.42);
    h4.GetXaxis().SetTitleOffset(0.83);
    h4.SetMinimum(rmin);
    h4.SetMaximum(rmax);
@@ -128,27 +128,27 @@ def plot(h1, h2, h3, h4, tanb, wX, nkevents, cme, fname, ymin=-1, ymax=-1):
    hr.SetLineColor(h3.GetLineColor());
    hr.SetLineStyle(h3.GetLineStyle());
    hr.SetLineWidth(h3.GetLineWidth());
-   xLabelSize = hr.GetXaxis().GetLabelSize()*1.85;
-   yLabelSize = hr.GetYaxis().GetLabelSize()*1.85;
-   xTitleSize = hr.GetXaxis().GetTitleSize()*1.85;
-   yTitleSize = hr.GetYaxis().GetTitleSize()*1.85;
-   titleSize  = hr.GetTitleSize()           *1.85;
+   xLabelSize = hr.GetXaxis().GetLabelSize()*1.9
+   yLabelSize = hr.GetYaxis().GetLabelSize()*1.9
+   xTitleSize = hr.GetXaxis().GetTitleSize()*1.9
+   yTitleSize = hr.GetYaxis().GetTitleSize()*1.9
+   titleSize  = hr.GetTitleSize()           *1.9
    hr.GetXaxis().SetLabelSize(xLabelSize);
    hr.GetYaxis().SetLabelSize(yLabelSize);
    hr.GetXaxis().SetTitleSize(xTitleSize);
    hr.GetYaxis().SetTitleSize(yTitleSize);
    hr.SetTitleSize(titleSize);
-   hr.GetYaxis().SetTitleOffset(0.55);
+   hr.GetYaxis().SetTitleOffset(0.4);
    hr.GetXaxis().SetTitleOffset(0.83);
    hr.SetMinimum(rmin);
    hr.SetMaximum(rmax);
    lineR = TLine(hr.GetXaxis().GetXmin(),1.,hr.GetXaxis().GetXmax(),1.);
 
    tvp_hists.SetBottomMargin(0);
-   tvp_subtr.SetTopMargin(0);
+   # tvp_subtr.SetTopMargin(0);
    tvp_subtr.SetBottomMargin(0);
    tvp_ratio.SetTopMargin(0);
-   tvp_ratio.SetBottomMargin(0.0);
+   tvp_ratio.SetBottomMargin(0.2);
    
    leg = TLegend(0.5,0.4,0.87,0.9,"","brNDC")
    leg.SetFillStyle(4000); # will be transparent
@@ -157,7 +157,7 @@ def plot(h1, h2, h3, h4, tanb, wX, nkevents, cme, fname, ymin=-1, ymax=-1):
    leg.SetBorderSize(0)
    leg.AddEntry(0, "MadGraph+Pythia8", "")
    leg.AddEntry(0, "#it{gg}#rightarrow#it{t}#bar{#it{t}} ("+str(nkevents)+"k events)", "")
-   leg.AddEntry(0, cme, "")
+   leg.AddEntry(0, cme+", "+lumi, "")
    leg.AddEntry(h1,"SM","ple")
    leg.AddEntry(h2,"SM+#it{"+nameX+"} reweighted","ple")
    leg.AddEntry(h3,"SM+#it{"+nameX+"} generated","ple")
@@ -195,6 +195,7 @@ def plot(h1, h2, h3, h4, tanb, wX, nkevents, cme, fname, ymin=-1, ymax=-1):
    tvp_ratio.RedrawAxis();
    
    cnv.Update();
+   cnv.SaveAs(fname.replace("(","").replace(")","").replace(".pdf",".single.pdf"));
    cnv.SaveAs(fname);
 
 
@@ -226,12 +227,19 @@ arrbins = array("d", listbins)
 nbins = len(listbins)-1
 
 ### mass histos
-hmSMgen = TH1D("hmSMgen", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
-hmXXrwt = TH1D("hmXXrwt", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
-hmXIrwt = TH1D("hmXIrwt", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
-hmXXgen = TH1D("hmXXgen", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
-hmXIabs = TH1D("hmXIabs", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 10 GeV",70,300,1000)
+hmSMgen    = TH1D("hmSMgen",   ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
+hmXXrwt    = TH1D("hmXXrwt",   ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
+hmX0rwt    = TH1D("hmX0rwt",   ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
+hmXIrwt    = TH1D("hmXIrwt",   ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
+hmXI0rwt   = TH1D("hmXI0rwt",  ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
+hmXXgen    = TH1D("hmXXgen",   ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
+hmX0gen    = TH1D("hmX0gen",   ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
+hmXIabs    = TH1D("hmXIabs",   ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 10 GeV",70,300,1000)
+hmX0abs    = TH1D("hmX0abs",   ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 10 GeV",70,300,1000)
+hmX0absGen = TH1D("hmX0absGen", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 10 GeV",70,300,1000)
 hmXIabsStd = TH1D("hmXIabsStd", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
+hmX0absStd = TH1D("hmX0absStd", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
+hmX0absStdGen = TH1D("hmX0absStdGen", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events / 40 GeV",nbins,arrbins)
 
 hmSMgen.Sumw2()
 hmSMgen.SetLineWidth(2)
@@ -245,11 +253,23 @@ hmXXrwt.SetLineColor(ROOT.kRed)
 hmXXrwt.SetMarkerColor(ROOT.kRed)
 hmXXrwt.SetMarkerStyle(20)
 
+hmX0rwt.Sumw2()
+hmX0rwt.SetLineWidth(2)
+hmX0rwt.SetLineColor(ROOT.kRed)
+hmX0rwt.SetMarkerColor(ROOT.kRed)
+hmX0rwt.SetMarkerStyle(20)
+
 hmXIrwt.Sumw2()
 hmXIrwt.SetLineWidth(2)
 hmXIrwt.SetLineColor(ROOT.kRed)
 hmXIrwt.SetMarkerColor(ROOT.kRed)
 hmXIrwt.SetMarkerStyle(20)
+
+hmXI0rwt.Sumw2()
+hmXI0rwt.SetLineWidth(2)
+hmXI0rwt.SetLineColor(ROOT.kRed)
+hmXI0rwt.SetMarkerColor(ROOT.kRed)
+hmXI0rwt.SetMarkerStyle(20)
 
 hmXXgen.Sumw2()
 hmXXgen.SetLineWidth(2)
@@ -257,35 +277,72 @@ hmXXgen.SetLineColor(ROOT.kAzure+9)
 hmXXgen.SetMarkerColor(ROOT.kAzure+9)
 hmXXgen.SetMarkerStyle(24)
 
+hmX0gen.Sumw2()
+hmX0gen.SetLineWidth(2)
+hmX0gen.SetLineColor(ROOT.kAzure+9)
+hmX0gen.SetMarkerColor(ROOT.kAzure+9)
+hmX0gen.SetMarkerStyle(24)
+
 hmXIabs.Sumw2()
 hmXIabs.SetLineWidth(2)
 hmXIabs.SetLineColor(ROOT.kRed)
+
+hmX0abs.Sumw2()
+hmX0abs.SetLineWidth(2)
+hmX0abs.SetLineColor(ROOT.kBlue)
+hmX0abs.SetFillColor(ROOT.kBlue)
+
+hmX0absGen.Sumw2()
+hmX0absGen.SetLineWidth(2)
+hmX0absGen.SetLineColor(ROOT.kGreen)
 
 hmXIabsStd.Sumw2()
 hmXIabsStd.SetLineWidth(2)
 hmXIabsStd.SetLineColor(ROOT.kRed)
 
+hmX0absStd.Sumw2()
+hmX0absStd.SetLineWidth(2)
+hmX0absStd.SetLineColor(ROOT.kBlue)
+hmX0absStd.SetFillColor(ROOT.kBlue)
+
+hmX0absStdGen.Sumw2()
+hmX0absStdGen.SetLineWidth(2)
+hmX0absStdGen.SetLineColor(ROOT.kBlue)
+hmX0absStdGen.SetFillColor(ROOT.kBlue)
 
 
+#############################
+lumiData = 20.3 # fb-1
+sqrts = 8 # 13 or 8 TeV
+docuts = False
+#############################
 
-fSM = TFile("/Users/hod/MC/Pythia/pythia8215/examples/tops.SM_nobmass_8TeV.root","READ")
-tSM = fSM.Get("SM_nobmass_8TeV")
-# fSM = TFile("/Users/hod/MC/Pythia/pythia8215/examples/tops.SM_8TeV.root","READ")
-# tSM = fSM.Get("SM_8TeV")
-pSM = ROOT.vector(TLorentzVector)()
-iSM = std.vector(int)()
-tSM.SetBranchAddress("p4",pSM);
-tSM.SetBranchAddress("id",iSM);
+fpath = "/Users/hod/MC/Pythia/pythia8215/examples/"
+fSM = TFile(fpath+"tops.SM_nobmass_8TeV.root","READ") if(sqrts==8) else TFile(fpath+"tops.SM_nobmass.root","READ")
+tSM = fSM.Get("SM_nobmass_8TeV") if(sqrts==8) else fSM.Get("SM_nobmass")
+# pSM = ROOT.vector(TLorentzVector)()
+# iSM = std.vector(int)()
+# tSM.SetBranchAddress("p4",pSM);
+# tSM.SetBranchAddress("id",iSM);
 
-fXX = TFile("/Users/hod/MC/Pythia/pythia8215/examples/tops.SMIA_8TeV.root","READ")
-tXX = fXX.Get("SMIA_8TeV")
-pXX = ROOT.vector(TLorentzVector)()
-iXX = std.vector(int)()
-tXX.SetBranchAddress("p4",pXX);
-tXX.SetBranchAddress("id",iXX);
+fXX = TFile(fpath+"tops.SMIA_8TeV.root","READ") if(sqrts==8) else TFile(fpath+"tops.SMIA.root","READ")
+tXX = fXX.Get("SMIA_8TeV") if(sqrts==8) else fXX.Get("SMIA")
+# pXX = ROOT.vector(TLorentzVector)()
+# iXX = std.vector(int)()
+# tXX.SetBranchAddress("p4",pXX);
+# tXX.SetBranchAddress("id",iXX);
+
+fX0 = TFile(fpath+"tops.A_8TeV.root","READ") if(sqrts==8) else TFile(fpath+"tops.A.root","READ")
+tX0 = fX0.Get("A_8TeV") if(sqrts==8) else fXX.Get("A")
+# pX0 = ROOT.vector(TLorentzVector)()
+# iX0 = std.vector(int)()
+# tX0.SetBranchAddress("p4",pX0);
+# tX0.SetBranchAddress("id",iX0);
 
 nkevents = tXX.GetEntries()/1000
-cme = "#sqrt{#it{s}} = 8 TeV" if("8TeV" in fSM.GetName()) else "#sqrt{#it{s}} = 13 TeV"
+legcme = "#sqrt{#it{s}} = 8 TeV" if("8TeV" in fSM.GetName()) else "#sqrt{#it{s}} = 13 TeV"
+scme = "8TeV" if("8TeV" in fSM.GetName()) else "13TeV"
+leglumi = "20.3 fb^{-1}"
 
 n=1
 for event in tSM:
@@ -295,6 +352,9 @@ for event in tSM:
    t1=event.p4[2]
    t2=event.p4[3]
    mtt = (t1+t2).M()
+
+   if(docuts and (t1.Pt()<60 or t2.Pt()<60)):               continue
+   if(docuts and (abs(t1.Eta())>2.5 or abs(t2.Eta())>2.5)): continue
 
    p = [[ g1.E(), g1.Px(), g1.Py(), g1.Pz() ],
         [ g2.E(), g2.Px(), g2.Py(), g2.Pz() ],
@@ -306,17 +366,23 @@ for event in tSM:
    alphaS = event.aS #THDM.model.AlphaS.alphasQ(Q)
 
    ## the ME^2 and the weight
-   # me2SM = THDM.modules['matrix2SMpy'].get_me(P,alphaS,nhel)                   ### calculate the SM ME^2
-   # me2XX = THDM.modules['matrix2'+nameX+str(index)+'py'].get_me(P,alphaS,nhel) ### calculate the X ME^2
-   me2SM = THDM.modules['matrix2SMttxpy'].get_me(P,alphaS,nhel)                   ### calculate the SM ME^2
-   me2XX = THDM.modules['matrix2'+nameX+str(index)+'ttxpy'].get_me(P,alphaS,nhel) ### calculate the X ME^2
-   weightX = me2XX/me2SM                                                       ### calculate the weight
+   # me2SM = THDM.modules['matrix2SMpy'].get_me(P,alphaS,nhel)                           ### calculate the SM ME^2
+   # me2XX = THDM.modules['matrix2'+nameX+str(index)+'py'].get_me(P,alphaS,nhel)         ### calculate the X ME^2
+   me2SM = THDM.modules['matrix2SMttxpy'].get_me(P,alphaS,nhel)                          ### calculate the SM ME^2
+   me2XX = THDM.modules['matrix2'+nameX+str(index)+'ttxpy'].get_me(P,alphaS,nhel)        ### calculate the X ME^2
+   me2X0 = THDM.modules['matrix2'+nameX+"only"+str(index)+'ttxpy'].get_me(P,alphaS,nhel) ### calculate the X ME^2
+   weightXX = me2XX/me2SM                                                                 ### calculate the weight
+   weightX0 = me2X0/me2SM                                                                 ### calculate the weight
 
    hmSMgen.Fill(mtt)
-   hmXXrwt.Fill(mtt,weightX)
-   hmXIrwt.Fill(mtt,weightX-1)
-   hmXIabs.Fill(mtt,weightX-1)
-   hmXIabsStd.Fill(mtt,weightX-1)
+   hmXXrwt.Fill(mtt,weightXX)
+   hmX0rwt.Fill(mtt,weightX0)
+   hmXIrwt.Fill(mtt,weightXX-1)
+   hmXI0rwt.Fill(mtt,weightX0-1)
+   hmXIabs.Fill(mtt,weightXX-1)
+   hmX0abs.Fill(mtt,weightX0)
+   hmXIabsStd.Fill(mtt,weightXX-1)
+   hmX0absStd.Fill(mtt,weightX0)
 
    n+=1
 
@@ -327,32 +393,83 @@ for event in tXX:
    if(n%10000==0): print "processed |SM+X|^2 generated ", n
    t1=event.p4[2]
    t2=event.p4[3]
+   if(docuts and (t1.Pt()<60 or t2.Pt()<60)):               continue
+   if(docuts and (abs(t1.Eta())>2.5 or abs(t2.Eta())>2.5)): continue
    mtt = (t1+t2).M()
    hmXXgen.Fill(mtt)
    n+=1
 
+n=1
+for event in tX0:
+   if(n%10000==0): print "processed |SM+X|^2 generated ", n
+   t1=event.p4[2]
+   t2=event.p4[3]
+   if(docuts and (t1.Pt()<60 or t2.Pt()<60)):               continue
+   if(docuts and (abs(t1.Eta())>2.5 or abs(t2.Eta())>2.5)): continue
+   mtt = (t1+t2).M()
+   hmX0gen.Fill(mtt)
+   hmX0absGen.Fill(mtt)
+   hmX0absStdGen.Fill(mtt)
+   n+=1
+
+
 hmSMgen = normalizeToBinWidth(hmSMgen,40)
 hmXXgen = normalizeToBinWidth(hmXXgen,40)
+hmX0gen = normalizeToBinWidth(hmX0gen,40)
 hmXXrwt = normalizeToBinWidth(hmXXrwt,40)
+hmX0rwt = normalizeToBinWidth(hmX0rwt,40)
 hmXIrwt = normalizeToBinWidth(hmXIrwt,40)
+hmXI0rwt = normalizeToBinWidth(hmXI0rwt,40)
 # hmXIabs = normalizeToBinWidth(hmXIabs)
+# hmX0abs = normalizeToBinWidth(hmX0abs)
+# hmX0absGen = normalizeToBinWidth(hmX0absGen)
 hmXIabsStd = normalizeToBinWidth(hmXIabsStd,40)
+hmX0absStd = normalizeToBinWidth(hmX0absStd,40)
+hmX0absStdGen = normalizeToBinWidth(hmX0absStdGen,40)
+
+mb2fb = 1.e12
+pb2fb = 1.e3
+sigmaSM8TeV = 1.285e-07*mb2fb  # 253*pb2fb
+sigmaSM13TeV = 4.458e-07*mb2fb # 831*pb2fb
+sigmaXonly8TeV = 3.978e-09*mb2fb
+sigmaSM = sigmaSM8TeV if("8TeV" in fSM.GetName()) else sigmaSM13TeV
+neventsSM = tXX.GetEntries()
+neventsXonly = tX0.GetEntries()
+lumiSM = neventsSM/sigmaSM
+lumiXonly = neventsXonly/sigmaXonly8TeV
+
+hmSMgen.Scale(lumiData/lumiSM)
+hmXXgen.Scale(lumiData/lumiSM)
+hmX0gen.Scale(lumiData/lumiXonly)
+hmXXrwt.Scale(lumiData/lumiSM)
+hmX0rwt.Scale(lumiData/lumiSM)
+
+print "hmX0gen.Integral()/hmX0rwt.Integral() = ",hmX0gen.Integral()/hmX0rwt.Integral()
+factor = 1 #hmX0gen.Integral()/hmX0rwt.Integral()
+
+hmX0rwt.Scale(factor)
+hmXIrwt.Scale(lumiData/lumiSM)
+hmXI0rwt.Scale(lumiData/lumiSM)
+hmXIabs.Scale(lumiData/lumiSM)
+hmX0abs.Scale(lumiData/lumiSM * factor)
+hmX0absGen.Scale(lumiData/lumiXonly)
+hmXIabsStd.Scale(lumiData/lumiSM)
+hmX0absStd.Scale(lumiData/lumiSM * factor)
+hmX0absStdGen.Scale(lumiData/lumiXonly)
+
 
 
 tanb = '%.2f' % THDM.parameters[index].get("tanb")
 wXprcnt = '%.1f' % (THDM.parameters[index].get("w"+nameX)/mX*100.)
 stanb = tanb.replace(".","")
-pdfname = "2HDM.reweighting."+nameX+"."+str(mX)+"GeV.tanb"+stanb+".pdf"
-plot(hmSMgen,hmXXrwt,hmXXgen,hmXIrwt,tanb,wXprcnt,nkevents,cme,pdfname+"(")
+pdfname = "2HDM.reweighting.sqrts"+scme+"."+nameX+"."+str(mX)+"GeV.tanb"+stanb+".pdf"
 
 
 
-mb2fb = 1.e12
-pb2fb = 1.e3
-sigmaSM = 1.285e-07*mb2fb # 252.89*pb2fb
-neventsSM = tXX.GetEntries()
-lumiSM = neventsSM/sigmaSM
-lumiData = 20.3 ## fb-1
+plot(hmSMgen,hmXXrwt,hmXXgen,hmXIrwt,tanb,wXprcnt,nkevents,legcme,leglumi,pdfname+"(")
+plot(hmSMgen,hmX0rwt,hmX0gen,hmXI0rwt,tanb,wXprcnt,nkevents,legcme,leglumi,pdfname)
+
+
 
 legabs = TLegend(0.5,0.5,0.87,0.9,"","brNDC")
 legabs.SetFillStyle(4000); # will be transparent
@@ -361,7 +478,7 @@ legabs.SetTextFont(42)
 legabs.SetBorderSize(0)
 legabs.AddEntry(0, "MadGraph+Pythia8", "")
 legabs.AddEntry(0, "#it{gg}#rightarrow#it{t}#bar{#it{t}} ("+str(nkevents)+"k events)", "")
-legabs.AddEntry(0, cme+", "+str(lumiData)+" fb^{-1}", "")
+legabs.AddEntry(0, legcme+", "+leglumi, "")
 legabs.AddEntry(hmXIabs,"|SM+#it{"+nameX+"}|^{2}-|SM|^{2} reweighted","l")
 legabs.AddEntry(0, "sin(#beta-#alpha)=1", "")
 legabs.AddEntry(0, "tan#beta="+str(tanb), "")
@@ -369,29 +486,47 @@ legabs.AddEntry(0, "#it{m}_{#it{"+nameX+"}}="+str(mX)+" GeV", "")
 legabs.AddEntry(0, "#Gamma_{#it{"+nameX+"}}/#it{m}_{#it{"+nameX+"}}="+str(wXprcnt)+" [%]", "")
 
 
-
-hmXIabs.Scale(lumiData/lumiSM)
-hmXIabs.SetMinimum(hmXIabs.GetMinimum()*1.1)
-hmXIabs.SetMaximum(hmXIabs.GetMaximum()*2.3)
-cnv = TCanvas("cnv","",600,500)
+if(sqrts==13):
+   hmXIabs.SetMinimum(hmXIabs.GetMinimum()*1.1)
+   hmXIabs.SetMaximum(hmXIabs.GetMaximum()*2.3)
+   hmX0abs.SetMinimum(hmXIabs.GetMinimum())
+   hmX0abs.SetMaximum(hmXIabs.GetMaximum())
+   hmX0absGen.SetMinimum(hmXIabs.GetMinimum())
+   hmX0absGen.SetMaximum(hmXIabs.GetMaximum())
+if(sqrts==8):
+   hmXIabs.SetMinimum(-5000)
+   hmXIabs.SetMaximum(+21500)
+   hmX0abs.SetMinimum(-5000)
+   hmX0abs.SetMaximum(+21500)
+   hmX0absGen.SetMinimum(-5000)
+   hmX0absGen.SetMaximum(+21500)
+cnv = TCanvas("cnv","",600,445)
 cnv.Draw()
 cnv.cd()
 cnv.SetGrid(1,1)
 hmXIabs.Draw("hist")
+hmX0abs.Draw("hist same")
+hmXIabs.Draw("hist same")
+hmX0absGen.Draw("hist same")
 legabs.Draw("same")
 cnv.RedrawAxis()
 cnv.Update()
+cnv.SaveAs(pdfname.replace("(","").replace(")","").replace(".pdf",".abs1.pdf"))
 cnv.SaveAs(pdfname)
 
-hmXIabsStd.Scale(lumiData/lumiSM)
 hmXIabsStd.SetMinimum(hmXIabsStd.GetMinimum()*1.1)
 hmXIabsStd.SetMaximum(hmXIabsStd.GetMaximum()*2.3)
-cnv = TCanvas("cnv","",600,500)
+hmX0absStd.SetMinimum(hmXIabsStd.GetMinimum())
+hmX0absStd.SetMaximum(hmXIabsStd.GetMaximum())
+cnv = TCanvas("cnv","",600,445)
 cnv.Draw()
 cnv.cd()
 cnv.SetGrid(1,1)
 hmXIabsStd.Draw("hist")
+hmX0absStd.Draw("hist same")
+hmXIabsStd.Draw("hist same")
 legabs.Draw("same")
 cnv.RedrawAxis()
 cnv.Update()
+cnv.SaveAs(pdfname.replace("(","").replace(")","").replace(".pdf",".abs2.pdf"))
 cnv.SaveAs(pdfname+")")

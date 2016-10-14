@@ -231,19 +231,23 @@ def compileX(index,mgpath,nameX,mX,sba):
    X       = "matrix/"+nameX+"/"+str(mX)+"/"+str(sba)+"/"
    command = "./bin/mg5_aMC noam/proc_card_mg5_"+nameX+"_partonlevel.minimal.dat"
    procdirbase = "ggtt-"+nameX+"-partonlevel/SubProcesses/"
-   S = ""
-   if(nameX=="A"): S = "h"
-   if(nameX=="H"): S = "h1"
-   procdirs = [procdirbase+"P1_gg_ttx_no_"+S+"/"]
+   S_no = ""
+   if(nameX=="Aonly"): S_no = "h"
+   if(nameX=="Honly"): S_no = "h1"
+   if(nameX=="A"):     S_no = "h"
+   if(nameX=="H"):     S_no = "h1"
+   S_yes = "h" if(S_no=="h1") else "h1"
 
-   # procdirs = [procdirbase+"P0_gg_ttx_no_"+S+"/",
-   #             procdirbase+"P1_gg_ttxg_no_"+S+"/",
-   #             procdirbase+"P2_gg_ttxgg_no_"+S+"/",
-   #             procdirbase+"P2_gg_ttxuux_no_"+S+"/", 
-   #             procdirbase+"P2_gg_ttxddx_no_"+S+"/",
-   #             procdirbase+"P2_gg_ttxssx_no_"+S+"/",
-   #             procdirbase+"P2_gg_ttxccx_no_"+S+"/",
-   #             procdirbase+"P2_gg_ttxbbx_no_"+S+"/"]
+   procdirs = [procdirbase+"P1_gg_ttx_no_"+S_no+"/"] if("only" not in nameX) else [procdirbase+"P1_gg_"+S_yes+"_ttx_no_"+S_no+"/"]
+
+   # procdirs = [procdirbase+"P0_gg_ttx_no_"+S_no+"/",
+   #             procdirbase+"P1_gg_ttxg_no_"+S_no+"/",
+   #             procdirbase+"P2_gg_ttxgg_no_"+S_no+"/",
+   #             procdirbase+"P2_gg_ttxuux_no_"+S_no+"/", 
+   #             procdirbase+"P2_gg_ttxddx_no_"+S_no+"/",
+   #             procdirbase+"P2_gg_ttxssx_no_"+S_no+"/",
+   #             procdirbase+"P2_gg_ttxccx_no_"+S_no+"/",
+   #             procdirbase+"P2_gg_ttxbbx_no_"+S_no+"/"]
    thisdir = os.getcwd()+"/"
    matxdir = thisdir+X
    libdir  = matxdir+str(index)+"/"
@@ -309,7 +313,7 @@ def compileX(index,mgpath,nameX,mX,sba):
             # procname = procname.replace(procdirbase+"P0_gg_","")
             # procname = procname.replace(procdirbase+"P1_gg_","")
             # procname = procname.replace(procdirbase+"P2_gg_","")
-            procname = procname.replace("_no_"+S+"/","")
+            procname = procname.replace("_no_"+S_no+"/","").replace(S_yes+"_","")
             if(notMade):
                p = subprocess.Popen("make", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                out, err = p.communicate()
@@ -347,6 +351,18 @@ def setModules(libmatrix,nameX,nX,libs="All",index=-1):
                modules.update({name:imp.load_module(name, *module_info)})
                modules[name].initialise("param_card.dat")
                print "Successfully initialised ",name
+
+            name = 'matrix2'+nameX+"only"+str(i)+proc+'py'
+            libmatrixonly = libmatrix.replace("/"+nameX+"/","/"+nameX+"only/")
+            sindex = str(i)
+            print "changing dir to: "+libmatrixonly+sindex+"/"+proc+"/"
+            with cd(libmatrixonly+sindex+"/"+proc+"/"):
+               print "in "+os.getcwd()+", trying to import ",name
+               module_info = imp.find_module(name,[libmatrixonly+str(i)+"/"+proc+"/"])
+               modules.update({name:imp.load_module(name, *module_info)})
+               modules[name].initialise("param_card.dat")
+               print "Successfully initialised ",name
+
    if(libs=="X" and index!=-1):
       for proc in procsX:
          name = 'matrix2'+nameX+str(index)+proc+'py'
@@ -357,6 +373,17 @@ def setModules(libmatrix,nameX,nX,libs="All",index=-1):
             modules.update({name:imp.load_module(name, *module_info)})
             modules[name].initialise("param_card.dat")
             print "Successfully initialised ",name
+
+         name = 'matrix2'+nameX+"only"+str(index)+proc+'py'
+         libmatrixonly = libmatrix.replace("/"+nameX+"/","/"+nameX+"only/")
+         sindex = str(index)
+         with cd(libmatrixonly+sindex+"/"+proc+"/"):
+            print "in "+os.getcwd()+", trying to import ",name
+            module_info = imp.find_module(name,[libmatrixonly+str(index)+"/"+proc+"/"])
+            modules.update({name:imp.load_module(name, *module_info)})
+            modules[name].initialise("param_card.dat")
+            print "Successfully initialised ",name
+
    if(libs=="All" or libs=="SM"):
       for proc in procsSM:
          name = 'matrix2SM'+proc+'py'
@@ -444,9 +471,12 @@ def makeSM(mgpath,nameX,mX,sba,test=False):
 def make2HDM(mgpath,nameX,mX,sba,test=False):
    for i in range(0,len(parameters)):
       compileX(i,mgpath,nameX,mX,sba)
+      compileX(i,mgpath,nameX+"only",mX,sba)
       if(test):
         me2 = testImport(nameX,mX,sba,i)
-        print "Done making library "+str(i)+" -> test ME^2="+str(me2)
+        print "Done making library "+nameX+"/"+str(i)+" -> test ME^2="+str(me2)
+        # me2 = testImport(nameX+"only",mX,sba,i)
+        # print "Done making library "+nameX+"only/"+str(i)+" -> test ME^2="+str(me2)
       else:
         print "Done making library "+str(i)
 
