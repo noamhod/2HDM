@@ -313,7 +313,7 @@ hmX0absStdGen.SetFillColor(ROOT.kBlue)
 
 #############################
 lumiData = 20.3 # fb-1
-sqrts = 8 # 13 or 8 TeV
+sqrts = 8 #or 13 TeV
 docuts = False
 #############################
 
@@ -344,7 +344,10 @@ legcme = "#sqrt{#it{s}} = 8 TeV" if("8TeV" in fSM.GetName()) else "#sqrt{#it{s}}
 scme = "8TeV" if("8TeV" in fSM.GetName()) else "13TeV"
 leglumi = "20.3 fb^{-1}"
 
+
 n=1
+sumofweights_X0 = 0
+sumofweights_SM = 0
 for event in tSM:
    if(n%10000==0): print "processed |SM|^2 and reweighting ", n
    g1=event.p4[0]
@@ -384,8 +387,10 @@ for event in tSM:
    hmXIabsStd.Fill(mtt,weightXX-1)
    hmX0absStd.Fill(mtt,weightX0)
 
+   sumofweights_SM += 1
+   sumofweights_X0 += weightX0
+ 
    n+=1
-
 
 
 n=1
@@ -401,7 +406,7 @@ for event in tXX:
 
 n=1
 for event in tX0:
-   if(n%10000==0): print "processed |SM+X|^2 generated ", n
+   if(n%10000==0): print "processed |X|^2 generated ", n
    t1=event.p4[2]
    t2=event.p4[3]
    if(docuts and (t1.Pt()<60 or t2.Pt()<60)):               continue
@@ -445,7 +450,19 @@ hmXXrwt.Scale(lumiData/lumiSM)
 hmX0rwt.Scale(lumiData/lumiSM)
 
 print "hmX0gen.Integral()/hmX0rwt.Integral() = ",hmX0gen.Integral()/hmX0rwt.Integral()
-factor = 1 #hmX0gen.Integral()/hmX0rwt.Integral()
+#########################################################################
+#########################################################################
+factor = 1/math.sqrt(2) #hmX0gen.Integral()/hmX0rwt.Integral() ##########
+#########################################################################
+#########################################################################
+if("8TeV" in fSM.GetName()):
+   xsecReweighted = (sumofweights_X0*factor/sumofweights_SM)*sigmaSM
+   print "sum of weights X0 = ",sumofweights_X0*factor
+   print "sum of weights SM = ",sumofweights_SM
+   print "cross section X0 reweighted = ",xsecReweighted
+   print "cross section X0 generated  = ",sigmaXonly8TeV
+   print "difference in percent  = ",(sigmaXonly8TeV-xsecReweighted)/sigmaXonly8TeV*100
+
 
 hmX0rwt.Scale(factor)
 hmXIrwt.Scale(lumiData/lumiSM)
