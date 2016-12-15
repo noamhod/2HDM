@@ -55,6 +55,27 @@ def magBetaSystem(pa, pb, ea, eb):
    if((ea+eb)>0.): return (pa+pb)/(ea+eb)
    return -999999.
 
+def cosphi(reference1, target1, reference2, target2):
+   targettmp1 = target1.Clone("tmp1")
+   targettmp2 = target2.Clone("tmp2")
+   vboost1 = reference1.BoostVector()
+   targettmp1.Boost(-vboost1)
+   vboost2 = reference2.BoostVector()
+   targettmp2.Boost(-vboost2)
+   cosp = targettmp1.Vect()*targettmp2.Vect() # scalar product
+   cosp /= (targettmp1.Vect().Mag()*targettmp2.Vect().Mag())
+   return cosp
+
+def costheta(reference, target):
+   targettmp = target.Clone("tmp")
+   vboost = reference.BoostVector()
+   targettmp.Boost(-vboost)
+   cost = targettmp.Vect()*vboost # scalar product
+   cost /= (targettmp.Vect().Mag()*vboost.Mag())
+   return cost
+
+
+
 def cosThetaTrue(pa, ida, pb, idb, doflip=False):
    #  http://xrootd.slac.stanford.edu/BFROOT/www/doc/workbook_backup_010108/analysis/analysis.html
    #  A useful quantity in many analyses is the helicity angle.

@@ -3,20 +3,22 @@
 <plist version="1.0">
 <dict>
 	<key>currentDocument</key>
-	<string>run3.py</string>
+	<string>kinematics.py</string>
 	<key>documents</key>
 	<array>
 		<dict>
 			<key>filename</key>
 			<string>main34.cc</string>
 			<key>lastUsed</key>
-			<date>2016-11-16T07:47:06Z</date>
+			<date>2016-12-04T13:30:43Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
 			<string>kinematics.py</string>
 			<key>lastUsed</key>
-			<date>2016-10-08T10:46:46Z</date>
+			<date>2016-12-05T14:19:06Z</date>
+			<key>selected</key>
+			<true/>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -64,9 +66,7 @@
 			<key>filename</key>
 			<string>run3.py</string>
 			<key>lastUsed</key>
-			<date>2016-11-16T08:28:13Z</date>
-			<key>selected</key>
-			<true/>
+			<date>2016-12-04T13:31:38Z</date>
 		</dict>
 		<dict>
 			<key>filename</key>
@@ -120,28 +120,44 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>42</integer>
+				<integer>17</integer>
 				<key>line</key>
-				<integer>238</integer>
+				<integer>3</integer>
 			</dict>
+			<key>columnSelection</key>
+			<false/>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>231</integer>
+			<integer>0</integer>
+			<key>selectFrom</key>
+			<dict>
+				<key>column</key>
+				<integer>0</integer>
+				<key>line</key>
+				<integer>0</integer>
+			</dict>
+			<key>selectTo</key>
+			<dict>
+				<key>column</key>
+				<integer>17</integer>
+				<key>line</key>
+				<integer>3</integer>
+			</dict>
 		</dict>
 		<key>main34.cc</key>
 		<dict>
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>59</integer>
+				<integer>45</integer>
 				<key>line</key>
-				<integer>383</integer>
+				<integer>244</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>384</integer>
+			<integer>231</integer>
 		</dict>
 		<key>makeMatrix.py</key>
 		<dict>
@@ -252,14 +268,14 @@
 			<key>caret</key>
 			<dict>
 				<key>column</key>
-				<integer>66</integer>
+				<integer>16</integer>
 				<key>line</key>
-				<integer>453</integer>
+				<integer>536</integer>
 			</dict>
 			<key>firstVisibleColumn</key>
 			<integer>0</integer>
 			<key>firstVisibleLine</key>
-			<integer>523</integer>
+			<integer>0</integer>
 		</dict>
 		<key>simpleMatrix.py</key>
 		<dict>
@@ -352,6 +368,6 @@
 	<key>showFileHierarchyDrawer</key>
 	<true/>
 	<key>windowFrame</key>
-	<string>{{204, 68}, {1067, 529}}</string>
+	<string>{{210, 248}, {1067, 529}}</string>
 </dict>
 </plist>

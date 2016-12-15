@@ -37,6 +37,8 @@ TFile* file;
 TTree* tree;
 vector<TLorentzVector>* p4;
 vector<int>*            id;
+vector<vector<int> >*   parents;
+vector<vector<int> >*   children;
 float                   Q;
 float                   Q2;
 float                   aS;
@@ -52,6 +54,8 @@ void setTree(int name)
 	
 	p4 = new vector<TLorentzVector>;
 	id = new vector<int>;
+	parents  = new vector<vector<int> >;
+	children = new vector<vector<int> >;
 	
 	switch(name)
 	{
@@ -78,6 +82,8 @@ void setTree(int name)
 	}	
 	tree->Branch("p4",&p4);
 	tree->Branch("id",&id);
+	tree->Branch("parents",&parents);
+	tree->Branch("children",&children);
 	tree->Branch("Q",&Q);
 	tree->Branch("Q2",&Q2);
 	tree->Branch("aS",&aS);
@@ -86,6 +92,10 @@ void clearTree()
 {
 	p4->clear();
 	id->clear();
+	for(int i=0 ; i<parents->size() ; ++i) parents->at(i).clear();
+	for(int i=0 ; i<children->size() ; ++i) children->at(i).clear();
+	parents->clear();
+	children->clear();
 	Q  = -1;
 	Q2 = -1;
 	aS = -1;
@@ -109,6 +119,8 @@ void writeTree()
 void run(Pythia* pythia, int name, int nEvent) {
   pythia->readString("Random:setSeed = on");
   pythia->readString("Random:seed = 1");
+  // pythia->readString("24:onMode = off"); // switch off all of the W decay modes
+  // pythia->readString("24:onIfAny = 13"); // switch on the W-->munu decay
   pythia->init();
 
   setTree(name);
@@ -119,43 +131,31 @@ void run(Pythia* pythia, int name, int nEvent) {
 	clearTree(); ////
 	/////////////////
 	
+	//////////////////////////////
+	// pythia->process.list(); ///
+	//////////////////////////////
+	
 	Q  = pythia->info.QRen();
 	Q2 = pythia->info.Q2Ren();
 	aS = pythia->info.alphaS();
-	
-    int iGlu1(0), iGlu2(0);
-	int iTop1(0), iTop2(0);
-	// cout << "-----------------" << endl;
-    for (int i = 0; i < pythia->process.size(); ++i) {
-		// cout << i << " --> id=" << pythia->process[i].id() << " (" << pythia->process[i].e() << "," << pythia->process[i].px() << "," << pythia->process[i].py() << "," << pythia->process[i].pz() << ")" << endl;
-      if (!iTop1 && pythia->process[i].id() ==  6) iTop1 = i;
-      if (!iTop2 && pythia->process[i].id() == -6) iTop2 = i;
-	  if (!iGlu1 && pythia->process[i].id() == 21) iGlu1 = i;
-      if (!iGlu2 && pythia->process[i].id() == 21 && i!=iGlu1) iGlu2 = i;
-      if (iTop1 && iTop2 && iGlu1 && iGlu2) {
-        iTop1 = pythia->process[iTop1].iBotCopyId();
-        iTop2 = pythia->process[iTop2].iBotCopyId();
-		iGlu1 = pythia->process[iGlu1].iTopCopyId();
-        iGlu2 = pythia->process[iGlu2].iTopCopyId();
-		TLorentzVector pp1, pp2, pp3, pp4;
-		pp1.SetPxPyPzE(pythia->process[iGlu1].px(),pythia->process[iGlu1].py(),pythia->process[iGlu1].pz(),pythia->process[iGlu1].e());
-		pp2.SetPxPyPzE(pythia->process[iGlu2].px(),pythia->process[iGlu2].py(),pythia->process[iGlu2].pz(),pythia->process[iGlu2].e());
-		pp3.SetPxPyPzE(pythia->process[iTop1].px(),pythia->process[iTop1].py(),pythia->process[iTop1].pz(),pythia->process[iTop1].e());
-		pp4.SetPxPyPzE(pythia->process[iTop2].px(),pythia->process[iTop2].py(),pythia->process[iTop2].pz(),pythia->process[iTop2].e());
-		p4->push_back(pp1);
-		p4->push_back(pp2);
-		p4->push_back(pp3);
-		p4->push_back(pp4);
-		id->push_back(pythia->process[iGlu1].id());
-		id->push_back(pythia->process[iGlu2].id());
-		id->push_back(pythia->process[iTop1].id());
-		id->push_back(pythia->process[iTop2].id());
-		
-		// cout << "tops(" << iTop1 << "," << iTop2 << ")  gluons(" << iGlu1 << "," << iGlu2 << ")" << endl;
-		// cout << "m(tt)=" << (pp3+pp4).M() << "  m(gg)=" << (pp1+pp2).M() << endl;
-		
-        break;
-      }
+
+	vector<int> vtmp;
+    for (int i = 0; i < pythia->process.size(); ++i)
+    {
+       TLorentzVector p;
+       p.SetPxPyPzE(pythia->process[i].px(),pythia->process[i].py(),pythia->process[i].pz(),pythia->process[i].e());
+       p4->push_back(p);
+       id->push_back(pythia->process[i].id());
+       int m1 = pythia->process[i].mother1();
+       int m2 = pythia->process[i].mother2();
+       int d1 = pythia->process[i].daughter1();
+       int d2 = pythia->process[i].daughter2();
+       parents->push_back(vtmp);
+       children->push_back(vtmp);
+       if(m1>=0) parents->at(i).push_back(pythia->process[m1].index());
+       if(m2>=0) parents->at(i).push_back(pythia->process[m2].index());
+       if(d1>=0) children->at(i).push_back(pythia->process[d1].index());
+       if(d2>=0) children->at(i).push_back(pythia->process[d2].index());
     }
     fillTree();
   }
@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
 	
 	// Pythia object to be used a couple of times
 	Pythia* pythia;
-	int nEvents = 405000;
+	int nEvents = 55000;//405000;
 	string sEvents = "";
 	stringstream strm;
 	strm << nEvents;
@@ -239,6 +239,8 @@ int main(int argc, char* argv[])
 		// madgraph_mgsm.setEvents(nEvents);
 		madgraph_mgsm.readString("import model sm");
 		madgraph_mgsm.readString("generate g g > t t~");
+		// madgraph_mgsm.readString("add process g g > t t~, ( t > b w+, w+ > j j), ( t~ > b~ w-, w- > l- vl~) @2");
+		// madgraph_mgsm.readString("add process g g > t t~,  ( t > b w+, w+ > l+ vl), ( t~ > b~ w-, w- > l- vl~) @3");
 		// Note the need for a blank character before "set".
 		madgraph_mgsm.readString(" set cut_decays F");
 		if(dynamical_scale_choice3) madgraph_mgsm.readString(" set dynamical_scale_choice 3");
@@ -278,7 +280,9 @@ int main(int argc, char* argv[])
 		LHAupMadgraph madgraph_smnobmass(pythia, true, "madgraphrun_smnobmass", exe);
 		// madgraph_smnobmass.setEvents(nEvents);
 		madgraph_smnobmass.readString("import model sm-no_b_mass");
-		madgraph_smnobmass.readString("generate g g > t t~");
+		// madgraph_smnobmass.readString("define j = g u c d s u~ c~ d~ s~ b b~");
+		madgraph_smnobmass.readString("generate g g > t t~, ( t > b w+, w+ > u d~), ( t~ > b~ w-, w- > mu- vm~)");
+		// madgraph_smnobmass.readString("generate g g > t t~");
 		// madgraph_smnobmass.readString("define j = g u c d s b u~ c~ d~ s~ b~");
 		// madgraph_smnobmass.readString("generate g g > t t~ @0");
 		// madgraph_smnobmass.readString("add process g g > t t~ j @1");
@@ -290,6 +294,22 @@ int main(int argc, char* argv[])
 		madgraph_smnobmass.readString(" set nevents "+sEvents);
 		madgraph_smnobmass.readString(" set ebeam1 6500");
 		madgraph_smnobmass.readString(" set ebeam2 6500");
+		
+		/*
+		madgraph_smnobmass.readString("define j = g u c d s u~ c~ d~ s~ b b~");
+		madgraph_smnobmass.readString("generate g g > t t~, ( t > b w+, w+ > l+ vl), ( t~ > b~ w-, w- > j j) @1");
+		//// MadSpin ////
+		madgraph_smnobmass.readString(" set max_weight_ps_point 400"); // number of PS to estimate the maximum for each event
+        madgraph_smnobmass.readString(" set seed 1");
+		// specify the decay for the final state particles
+		madgraph_smnobmass.readString(" decay t > w+ b, w+ > all all");
+		// madgraph_smnobmass.readString(" decay t~ > w- b~, w- > all all");
+		madgraph_smnobmass.readString(" decay t~ > w- b~, w- > mu vm~");
+		madgraph_smnobmass.readString(" decay w+ > all all");
+		madgraph_smnobmass.readString(" decay w- > all all");
+		madgraph_smnobmass.readString(" decay z > all all");
+		*/
+		
 		pythia->setLHAupPtr(&madgraph_smnobmass);
 		run(pythia, SM_nobmass, nEvents);
 		delete pythia;
@@ -326,7 +346,9 @@ int main(int argc, char* argv[])
 		LHAupMadgraph madgraph2(pythia, true, "madgraphrun2", exe);
 		// madgraph2.setEvents(nEvents);
 		madgraph2.readString("import model Higgs_Effective_Couplings_FormFact");
-		madgraph2.readString("generate g g > t t~ / h HIW=1 HIG=1 QED=99 QCD=99");
+		// madgraph2.readString("generate g g > t t~ / h HIW=1 HIG=1 QED=99 QCD=99");
+		// madgraph2.readString("generate g g > t t~, ( t > b w+, w+ > u d~), ( t~ > b~ w-, w- > mu- vm~) / h HIW=1 HIG=1 QED=99 QCD=99");
+		madgraph2.readString("generate g g > t t~ / h QED=99 QCD=99, ( t > b w+, w+ > u d~), ( t~ > b~ w-, w- > mu- vm~)");
 		// Note the need for a blank character before "set".
 		madgraph2.readString(" set cut_decays F");
 		if(dynamical_scale_choice3) madgraph2.readString(" set dynamical_scale_choice 3");
@@ -410,7 +432,8 @@ int main(int argc, char* argv[])
 		LHAupMadgraph madgraph3(pythia, true, "madgraphrun3", exe);
 		// madgraph3.setEvents(nEvents);
 		madgraph3.readString("import model Higgs_Effective_Couplings_FormFact");
-		madgraph3.readString("generate g g > h1 > t t~ / h QED=99 QCD=99");
+		// madgraph3.readString("generate g g > h1 > t t~ / h QED=99 QCD=99");
+		madgraph3.readString("generate g g > h1 > t t~ / h QED=99 QCD=99, ( t > b w+, w+ > u d~), ( t~ > b~ w-, w- > mu- vm~)");
 		// [59] tanb=0.860000 sba=1.000000 cba=0.000000 wA=30.931584 wH=17.434106 YMT=200.581395 YMB=4.042000 YMC=1.651163 YMM=0.090868 YMTAU=1.528220
 		// Note the need for a blank character before "set".
 		madgraph3.readString(" set cut_decays F");
@@ -439,16 +462,20 @@ int main(int argc, char* argv[])
 		LHAupMadgraph madgraph4(pythia, true, "madgraphrun4", exe);
 		// madgraph4.setEvents(nEvents);
 		madgraph4.readString("import model Higgs_Effective_Couplings_FormFact");
-		madgraph4.readString("generate g g > h > t t~ QED=99 QCD=99");
+		// madgraph4.readString("generate g g > h > t t~ / h1 QED=99 QCD=99");
+		madgraph4.readString("generate g g > h > t t~ / h1 QED=99 QCD=99, ( t > b w+, w+ > u d~), ( t~ > b~ w-, w- > mu- vm~)");
 		// Note the need for a blank character before "set".
 		madgraph4.readString(" set cut_decays F");
 		if(dynamical_scale_choice3) madgraph4.readString(" set dynamical_scale_choice 3");
+        // tanb=0.400000 sba=1.000000 cba=0.000000 wA=143.907354 wH=80.405335 YMT=-431.250000 YMB=1.880000 YMC=-3.550000 YMM=0.042264 YMTAU=0.710800
 		madgraph4.readString(" set MT 172.5");
-		madgraph4.readString(" set MH 500");
-		madgraph4.readString(" set WH 49.63");
-		madgraph4.readString(" set YMTAU 1.1351");
-		madgraph4.readString(" set YMT 260.8092");
-		madgraph4.readString(" set YMB 2.6825");
+		madgraph4.readString(" set MH 500.");
+		madgraph4.readString(" set WH 80.405335");
+		madgraph4.readString(" set YMTAU 0.710800");
+		madgraph4.readString(" set YMM 0.042264");
+		madgraph4.readString(" set YMC -3.550000");
+		madgraph4.readString(" set YMB 1.880000");
+		madgraph4.readString(" set YMT -431.250000");
 		madgraph4.readString(" set nevents "+sEvents);
 		madgraph4.readString(" set ebeam1 6500");
 		madgraph4.readString(" set ebeam2 6500");
@@ -456,7 +483,7 @@ int main(int argc, char* argv[])
 		run(pythia,H,nEvents);
 		delete pythia;
 	}
-	else if(name=="SMIH_valid")
+	else if(name=="SMIH")
 	{
 		// Produce leading-order gg->tt SM+A events with MadGraph 5.
 		pythia = new Pythia();
@@ -464,21 +491,19 @@ int main(int argc, char* argv[])
 		LHAupMadgraph madgraph_valid(pythia, true, "madgraphrun_valid", exe);
 		// madgraph_valid.setEvents(nEvents);
 		madgraph_valid.readString("import model Higgs_Effective_Couplings_FormFact");
-		madgraph_valid.readString("generate g g > t t~ / h1 HIW=1 HIG=1 QED=99 QCD=99");
+		madgraph_valid.readString("generate g g > t t~ / h1 QED=99 QCD=99, ( t > b w+, w+ > u d~), ( t~ > b~ w-, w- > mu- vm~)");
 		// Note the need for a blank character before "set".
-		// [20] tanb=0.660000 sba=1.000000 cba=0.000000 wA=52.510675 wH=29.593605 YMT=-261.363636 YMB=3.102000 YMC=-2.151515 YMM=0.069736 YMTAU=1.172820
+		// tanb=0.400000 sba=1.000000 cba=0.000000 wA=143.907354 wH=80.405335 YMT=-431.250000 YMB=1.880000 YMC=-3.550000 YMM=0.042264 YMTAU=0.710800
         madgraph_valid.readString(" set cut_decays F");
         if(dynamical_scale_choice3) madgraph_valid.readString(" set dynamical_scale_choice 3");
 		madgraph_valid.readString(" set MT 172.5");
-		madgraph_valid.readString(" set MP 500.");
 		madgraph_valid.readString(" set MH 500.");
-		madgraph_valid.readString(" set WH 29.593605");
-		madgraph_valid.readString(" set WH1 52.510675");
-		madgraph_valid.readString(" set YMTAU 1.172820");
-		madgraph_valid.readString(" set YMM 0.069736");
-		madgraph_valid.readString(" set YMC -2.151515");
-		madgraph_valid.readString(" set YMB 3.102000");
-		madgraph_valid.readString(" set YMT -261.363636"); 
+		madgraph_valid.readString(" set WH 80.405335");
+		madgraph_valid.readString(" set YMTAU 0.710800");
+		madgraph_valid.readString(" set YMM 0.042264");
+		madgraph_valid.readString(" set YMC -3.550000");
+		madgraph_valid.readString(" set YMB 1.880000");
+		madgraph_valid.readString(" set YMT -431.250000");
 		madgraph_valid.readString(" set nevents "+sEvents);
 		madgraph_valid.readString(" set ebeam1 6500");
 		madgraph_valid.readString(" set ebeam2 6500");
